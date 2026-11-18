@@ -29,7 +29,7 @@ test('source-composed payload stays within 8192-byte RPC boundary',()=>{
  }
 });
 test('running focus state is a Lua view port, never a native supervisor',()=>{
- const r=parse('-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=128;inputs=4;errors=0;drawhook=0;inputhook=0;callbacks=0','status');
+ const r=parse('-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=128;inputs=4;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0','status');
  assert.equal(r.renderedFrames,128);
  assert.equal(r.drawHookInstalled,false);
  assert.equal(r.drawCallbacks,0);
@@ -40,23 +40,23 @@ test('running focus state is a Lua view port, never a native supervisor',()=>{
  assert.equal(r.ready,false);
 });
 test('empty picker and clean stop are represented without claiming installation',()=>{
- const r=parse('-> IZ2S_FOCUS_V1;phase=running;view=picker;selected=0;installed=0;frames=200;inputs=3;errors=0;drawhook=0;inputhook=0;callbacks=0','select');
+ const r=parse('-> IZ2S_FOCUS_V1;phase=running;view=picker;selected=0;installed=0;frames=200;inputs=3;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0','select');
  assert.equal(r.view,'picker');
- assert.equal(parse('-> IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0','stop').phase,'idle');
- assert.throws(()=>parse('-> IZ2S_FOCUS_V1;phase=running;view=home;selected=5;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0','status'));
+ assert.equal(parse('-> IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0','stop').phase,'idle');
+ assert.throws(()=>parse('-> IZ2S_FOCUS_V1;phase=running;view=home;selected=5;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0','status'));
 });
 test('fixed payload is sent once and never synthesizes fake catalogue',async()=>{
  let n=0;
  const r=await execute('192.168.1.232','status',{},async q=>{
   n++;assert.equal(q.port,9026);assert.equal(q.lua,script('status'));
-  return '-> IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0';
+  return '-> IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0';
  });
  assert.equal(n,1);assert.equal(r.ready,false);
  assert.doesNotMatch(MODEL,/Foldrift|Cheese|Zelda|Doom/);
 });
 
 test('hook ownership and callback entry are distinct from rendered frames',()=>{
- const reply='-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=1;callbacks=0';
+ const reply='-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=1;callbacks=0;consolecalls=0;consolefailures=0';
  const r=parse(reply,'status');
  assert.equal(r.drawHookInstalled,true);
  assert.equal(r.inputHookInstalled,true);
@@ -65,5 +65,18 @@ test('hook ownership and callback entry are distinct from rendered frames',()=>{
  assert.equal(r.nativeSupervisorRunning,false);
 });
 test('the port cannot report hook ownership while idle or blocked',()=>{
- assert.throws(()=>parse('-> IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=0;callbacks=0','status'));
+ assert.throws(()=>parse('-> IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0','status'));
+});
+
+test('console draw exceptions are separately reported without claiming native startup',()=>{
+ const r=parse('-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=200;inputs=0;errors=0;drawhook=1;inputhook=1;callbacks=200;consolecalls=200;consolefailures=200','status');
+ assert.equal(r.consoleDrawCalls,200);
+ assert.equal(r.consoleDrawFailures,200);
+ assert.equal(r.renderedFrames,200);
+ assert.equal(r.nativeSupervisorRunning,false);
+});
+test('source draws after protected console callback and does not install a pre-console love.draw hook',()=>{
+ assert.match(TEMPLATE,/local worked,result=pcall\(old,\.\.\.\)/);
+ assert.match(TEMPLATE,/app\.consoleCalls=/);
+ assert.doesNotMatch(TEMPLATE,/love\.draw=app\.loveDrawHook/);
 });
