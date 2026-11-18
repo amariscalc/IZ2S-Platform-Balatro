@@ -437,4 +437,4 @@ node --test test/balatro-ffi-contract.test.cjs test/balatro-backend.test.cjs
 node --test test/balatro-*.test.cjs
 ```
 
-The allowed type labels are an **unverified candidate vocabulary** for adapting contracts in Node.js: they are not proof that Balatro accepts those exact spellings. A match between the observed Lua wrapper arity and the candidate signature does not verify the native ABI, actual SDK targets, memory operations, service IPC, permissions or startup. Keep `ready=false`.
+The descriptor counts integer/pointer and float/double register classes separately (up to 8 each, 16 mixed total), matching the limits documented for the upstream Balatro RCE 1.1.0 ABI: https://github.com/Luminger/balatro-switch-rce/releases/tag/v1.1.0 . No function is invoked.\n\nThe allowed type labels are an **unverified candidate vocabulary** for adapting contracts in Node.js: they are not proof that Balatro accepts those exact spellings. A match between the observed Lua wrapper arity and the candidate signature does not verify the native ABI, actual SDK targets, memory operations, service IPC, permissions or startup. Keep `ready=false`.
