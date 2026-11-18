@@ -17,6 +17,12 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  bridgePreflight:async(host,options)=>{
+   calls.push(['bridge-preflight',host,options]);
+   return {backend:'balatro',mode:'upstream-native-bridge-preflight',
+    bridgeCodeBytesVerified:true,signatureCompilerAccepted:true,
+    nativeCallAttempted:false,ready:false};
+  },
   ffiNames:async(host,options)=>{
    calls.push(['ffi-names',host,options]);return {backend:'balatro',mode:'read-only-ffi-names',ready:false};
   },
@@ -52,6 +58,11 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(names.mode,'read-only-ffi-names');
  assert.equal(names.ready,false);
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile','ffi-names']);
+ const bridge=await backend.inspectNativeBridge('192.168.1.232');
+ assert.equal(bridge.bridgeCodeBytesVerified,true);
+ assert.equal(bridge.nativeCallAttempted,false);
+ assert.equal(bridge.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile','ffi-names','bridge-preflight']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
