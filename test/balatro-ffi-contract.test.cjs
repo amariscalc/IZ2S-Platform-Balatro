@@ -11,14 +11,23 @@ const PROFILE={
 const DECLARATION={returnType:'u32',argumentTypes:['pointer','u64'],address:'sdk:example'};
 test('symbolic FFI declaration is copied and validated without invocation',()=>{
  const out=validateDeclaration(DECLARATION);
- assert.deepEqual(out,DECLARATION);
+ assert.deepEqual(out.returnType,DECLARATION.returnType);
+ assert.deepEqual(out.argumentTypes,DECLARATION.argumentTypes);
+ assert.equal(out.address,DECLARATION.address);
+ assert.equal(out.ffiReturnType,'uint32_t');
+ assert.deepEqual(out.ffiArgumentTypes,['void *','uint64_t']);
+ assert.deepEqual(out.registers,{integer:2,floating:0});
  assert.equal(Object.isFrozen(out.argumentTypes),true);
  assert.deepEqual(SIGNATURE.declare,['returnType','argumentTypes','address']);
  assert.ok(SUPPORTED_TYPES.includes('pointer'));
+ assert.ok(SUPPORTED_TYPES.includes('const char *'));
+ assert.equal(validateDeclaration({returnType:'double',argumentTypes:['float','size_t'],address:'sdk:example'}).ffiArgumentTypes[0],'float');
  assert.equal(MAX_PARAMS,16);
  assert.equal(MAX_INTEGER_ARGS,8);
  assert.equal(MAX_FLOAT_ARGS,8);
- assert.equal(validateDeclaration({...DECLARATION,argumentTypes:[...Array(8).fill('u64'),...Array(8).fill('f64')]}).argumentTypes.length,16);
+ const mixed=validateDeclaration({...DECLARATION,argumentTypes:[...Array(8).fill('u64'),...Array(8).fill('f64')]});
+ assert.equal(mixed.argumentTypes.length,16);
+ assert.deepEqual(mixed.registers,{integer:8,floating:8});
 });
 test('invalid types, raw pointers and oversized argument lists are rejected',()=>{
  for(const input of [
@@ -26,6 +35,9 @@ test('invalid types, raw pointers and oversized argument lists are rejected',()=
   {...DECLARATION,address:'0x1234'},
   {...DECLARATION,address:'sdk:../bad'},
   {...DECLARATION,returnType:'any'},
+  {...DECLARATION,returnType:'struct MyStruct'},
+  {...DECLARATION,argumentTypes:['...']},
+  {...DECLARATION,argumentTypes:['long double']},
   {...DECLARATION,argumentTypes:['void']},
   {...DECLARATION,argumentTypes:Array(9).fill('i32')},
   {...DECLARATION,argumentTypes:Array(9).fill('f64')},
