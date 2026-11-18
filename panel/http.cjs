@@ -76,6 +76,8 @@ async function createWindowServer({
   const assets = {
     '/reconnect.svg': ['reconnect.svg', 'image/svg+xml'],
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
+    '/balatro-diagnostics.js': ['balatro-diagnostics.js', 'text/javascript; charset=utf-8'],
+    '/balatro-diagnostics.css': ['balatro-diagnostics.css', 'text/css; charset=utf-8'],
     '/blitbun-capture.js': ['blitbun-capture.js', 'text/javascript; charset=utf-8'],
     '/storage.js': ['storage.js', 'text/javascript; charset=utf-8'],
     '/startup.js': ['startup.js', 'text/javascript; charset=utf-8'],
@@ -92,6 +94,8 @@ async function createWindowServer({
   };
   const corePanel = require('../engines/iz2s-core/panel.cjs');
   const coreController = corePanel.create({root, manager, out: coreOut, sdStore:coreSdStore});
+  const balatroDiagnostics = require('./balatro-diagnostics.cjs').create();
+  const balatroApp = require('./balatro-app.cjs').create();
   const withCoreSd = async value => {
     const coreSd=await coreController.sdStore.status();
     return coreSd.selected?{...value,coreSd}:value;
@@ -204,6 +208,29 @@ async function createWindowServer({
           modules: inventory.modules.map((m) => m.descriptor).filter(require('../core/packages/store-catalog.cjs').visible),
           moduleErrors: inventory.errors,
         });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/balatro/app') {
+        if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
+        const body = await readBody(req, 512);
+        if (!body || typeof body.host !== 'string' || typeof body.operation !== 'string' ||
+          Object.keys(body).some(key => !['host','operation','value'].includes(key)))
+          return reply(res, 400, {error: 'Expected Balatro host and action'});
+        return reply(res, 200, await balatroApp.action(body));
+      }
+      if (req.method === 'GET' && url.pathname === '/api/balatro/status')
+        return reply(res, 200, balatroDiagnostics.snapshot());
+      if (req.method === 'POST' && url.pathname === '/api/balatro/disconnect') {
+        if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
+        const body = await readBody(req, 256);
+        if (!body || Object.keys(body).length) return reply(res, 400, {error: 'Disconnect takes no arguments'});
+        return reply(res, 200, balatroDiagnostics.disconnect());
+      }
+      if (req.method === 'POST' && url.pathname === '/api/balatro/diagnose') {
+        if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
+        const data = await readBody(req, 1024);
+        if (!data || typeof data.host !== 'string' || Object.keys(data).some(key => key !== 'host'))
+          return reply(res, 400, {error: 'Expected console host only'});
+        return reply(res, 200, await balatroDiagnostics.run(data.host));
       }
       if (req.method === 'GET' && url.pathname === '/api/state') {
         return reply(res, 200, await withCoreSd(await snapshot()));

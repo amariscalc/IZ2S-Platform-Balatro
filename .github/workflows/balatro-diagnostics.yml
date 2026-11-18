@@ -1,0 +1,39 @@
+name: Balatro diagnostic backend tests
+
+on:
+  pull_request:
+    paths:
+      - 'engines/iz2s-core/runtime/installer/engine/switch2/balatro/**'
+      - 'panel/balatro-diagnostics.cjs'
+      - 'panel/ui/balatro-diagnostics.js'
+      - 'panel/http.cjs'
+      - 'panel/ui/panel.html'
+      - 'test/balatro-*.test.cjs'
+      - '.github/workflows/balatro-diagnostics.yml'
+  push:
+    branches:
+      - feature/balatro-diagnostics-backend
+    paths:
+      - 'engines/iz2s-core/runtime/installer/engine/switch2/balatro/**'
+      - 'panel/balatro-diagnostics.cjs'
+      - 'panel/ui/balatro-diagnostics.js'
+      - 'panel/http.cjs'
+      - 'panel/ui/panel.html'
+      - 'test/balatro-*.test.cjs'
+      - '.github/workflows/balatro-diagnostics.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs
+      - run: node --check panel/http.cjs
+      - run: node --check panel/balatro-diagnostics.cjs
+      - run: node --check panel/ui/balatro-diagnostics.js
+      - run: node --test test/balatro-*.test.cjs

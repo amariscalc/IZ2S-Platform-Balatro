@@ -1,202 +1,76 @@
-# IZ2S Platform
+# IZ2S Platform — Balatro experimental fork
 
-IZ2S is a Homebrew launcher for Nintendo Switch.
+This fork adds a **Balatro Lua/LÖVE entry method** to IZ2S Platform on Nintendo Switch 2. The current result is a working, **partial Lua port of the original IZ2S ORBIT FOCUS menu layout**. It is not the native IZ2S supervisor and cannot yet load or install IZ2S applications.
 
-## Download 0.25
+The upstream **SmileBASIC** and **Civilization VII** entry methods remain separate and unchanged. The original native launcher is still located at `core/console/sd-launcher/native/build/launcher.bin`; Balatro does **not** execute that binary.
 
-| System | Download |
+## Current status
+
+**Confirmed on a physical Switch 2 running firmware 23.0.1:**
+
+- Balatro's Lua RPC listener is reachable over TCP **9026**, and LuaJIT/FFI interfaces are available.
+- The **ORBIT FOCUS** Lua view is visible on the Switch 2 screen. It displays the IZ2S title, **ADD** card and **BROWSE** screen, using layout geometry and colors derived from the upstream shaders.
+- The gamepad works with the Lua view: a live session recorded **16 controller events** and successfully navigated from **HOME** to **BROWSE**.
+- The same session reported **9,401 rendered frames**, **9,401 draw callbacks**, **0 draw errors** and **0 console draw failures**.
+- The original native launcher binary and its manifest-listed sources pass offline integrity checks. **This does not mean the binary has executed.**
+
+The current view has **no verified application or package catalog**, so BROWSE displays `NO VERIFIED PACKAGE SOURCE`. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
+
+### Verified and unverified features
+
+| Feature | Status |
 | --- | --- |
-| Linux x64 / ARM64 | [Linux installation archive](https://github.com/byizmysh/IZ2S-Platform/releases/download/v0.25.0/IZ2S-Platform-0.25-linux.tar.gz) |
-| Windows x64 | [Windows installation ZIP](https://github.com/byizmysh/IZ2S-Platform/releases/download/v0.25.0/IZ2S-Platform-0.25-windows-x64.zip) |
-| File checksums | [SHA256SUMS.txt](https://github.com/byizmysh/IZ2S-Platform/releases/download/v0.25.0/SHA256SUMS.txt) |
+| Balatro Lua RPC (TCP 9026) | **Verified on Switch 2** |
+| LuaJIT/FFI, limited SDK calls and title-owned buffers | **Verified within Balatro's existing process**; not a native IZ2S transport |
+| ORBIT FOCUS Lua/LÖVE display | **Verified on screen**; partial port, not pixel-perfect |
+| Controller input and HOME → BROWSE navigation | **Verified on Switch 2** |
+| Draw callbacks and rendering | **Verified:** 9,401 frames; 0 draw errors in the recorded session |
+| Original native launcher and source integrity | **Verified offline**; never executed by Balatro |
+| Real installed-app/package catalog, icons and artwork | **Not connected** |
+| Application installation and native execution from Balatro | **Not implemented** |
+| Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
+| Full parity with the original IZ2S menu | **Not achieved** |
+| Balatro selection and diagnostics in the local web panel | **Integrated**; full browser regression verification pending |
 
-Use the installation archives above. GitHub's automatic **Source code** downloads are for development, not the packaged installers.
+## Run the current Lua menu
 
-## Screenshots
-
-### IZ2S Platform panel
-
-![IZ2S Platform App library in English](docs/images/iz2s-panel-0.25.png)
-
-### IZ2S console launcher
-
-![IZ2S 0.25 launcher showing the SD library and FTP shortcut](docs/images/iz2s-launcher-0.25.png)
-
-## Before installation
-
-Extract the entire archive into a new folder. Keep the folder structure intact. Installation creates a separate per-user copy; do not extract over an existing installation. Network access is required when the installer needs to download host dependencies.
-
-## Linux x64 / ARM64 installation
-
-Open a terminal in the extracted folder and run this single command:
-
-```sh
-sh ./install.sh --launch
-```
-
-Setup installs the missing prerequisites, verifies the installation, creates desktop and application-menu shortcuts and opens the panel automatically. Your package manager may request your password. No manual Node.js or Python setup is required on supported Linux systems.
-
-The installer checks Python 3, Pillow, curl, tar, xz and SSH; it can install system prerequisites with your package manager and prepare Node.js 24 if needed. The installer prints the final destination.
-
-For later launches, choose **IZ2S Platform** from the application menu, or open the installed folder and run:
-
-```sh
-./start.sh
-```
-
-The default location is a new versioned folder under:
-
-```text
-~/.local/share/iz2s-platform/releases/
-```
-
-The installer does not require an existing Node.js installation if it can download the private runtime. To choose a destination without system package changes or desktop shortcuts:
-
-```sh
-./install.sh --prefix /absolute/path/iz2s-platform --no-system-packages --no-desktop
-```
-
-## Windows x64 installation
-
-Extract the complete ZIP with **Extract All**, then double-click:
-
-```text
-Install.cmd
-```
-
-Wait until setup prints **Installed** and opens the panel automatically. For later launches, use the **IZ2S Platform** desktop or Start-menu shortcut, or open the printed destination folder and double-click:
-
-```text
-Start.vbs
-```
-
-The desktop and Start-menu shortcuts include the IZ2S icon and open the panel without a console window. For an existing installation, use those shortcuts or Start.vbs in the installed folder. Start.cmd is retained as a console diagnostic entry point; do not start files from the downloaded ZIP. Setup prepares private Node.js, Python and Pillow, and an SSH client if missing. Windows x64 is required; Windows ARM64 and 32-bit systems are not supported. The panel and console packages are included; the Linux PC media hosts and Civ7 Wi-Fi setup are not Windows-supported features.
-
-Windows may show its standard firewall permission dialog for Node.js. Allow access on your private network when connecting a console; the local panel itself works without opening incoming network access.
-
-## Opening the panel and checking the installation
-
-The panel normally opens at:
-
-```text
-http://127.0.0.1:39524
-```
-
-PC Link uses port **39525**. Installation verifies the packaged files automatically. The following optional commands use the private runtime from the installed folder; global Node.js/npm is not required.
-
-Preview on Linux (does not establish a console session):
-
-```sh
-./preview.sh
-```
-
-Preview on Windows:
+Requirements: Switch 2 with the existing Balatro Lua RPC listener running on the same **trusted local network**; Windows or another host with Node.js and this repository checked out on `feature/balatro-diagnostics-backend`. Replace the example IP with your console's address.
 
 ```powershell
-.\data\runtime\node\node.exe .\start.cjs --preview --no-open
+git pull
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
 ```
 
-Use the URL printed by the Preview process. To repeat the release-content checks on Linux:
+Use the **D-pad** and **A/B** on the console. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
 
-```sh
-./tools/node distribution/verify.cjs
-```
-
-On Windows:
+To run the Balatro automated regression tests:
 
 ```powershell
-.\data\runtime\node\node.exe .\distribution\verify.cjs
+node --test test/balatro-*.test.cjs
 ```
 
-## Included applications
+## Implementation
 
-| Application | Version | Purpose | Restrictions |
-| --- | --- | --- | --- |
-| [BlitBun](https://github.com/byizmysh/BlitBun) | 1.15.8 | PC video/audio streaming | Only Linux |
-| Book Reader | 0.1.0 | TXT/EPUB reader | |
-| Foldrift | 0.3.3 | Autonomous SD file manager | |
-| [IZ2S Cheese](https://github.com/byizmysh/iz2s-cheese) | 0.8.0 | Homebrew application catalog | |
-| [VacooTube](https://github.com/byizmysh/VacooTube) | 1.5.7 | Video player with PC source | Only Linux |
-| [IZPSX emulator](https://github.com/byizmysh/IZPSX-emulator) | 0.5.2 | PlayStation emulator | |
+| Component | Role |
+| --- | --- |
+| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus-model.lua` | Lua navigation state and layout geometry derived from the original shaders |
+| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.lua` | LÖVE drawing, controller hooks and reversible lifecycle |
+| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs` | Bounded Lua RPC interface: `start`, `status`, `left`, `right`, `select`, `back`, `stop` |
+| `engines/CivSwitch/launcher/app/shaders/` | Original ORBIT FOCUS layout, colors and navigation reference |
+| `core/console/sd-launcher/` | Original native launcher and bootstrap, not executed from Balatro |
 
-Open **App library** in the panel and install the selected application to the paired console. For a mounted SD card, use the platform's SD installation/export action. The installed entry is:
+The Balatro native-entry adapter deliberately rejects unsupported native operations. Lua-side drawing and FFI presence must **not** be treated as evidence of arbitrary process memory access, service permissions or executable code mapping.
 
-```text
-SD:/iz2s/modules/<id>/launcher.iza
-```
+## Next priorities
 
-Keep every exported companion resource, manifest and signature beside the executable.
+1. Connect a **verified, read-only source** of IZ2S application/package metadata to the Lua view, without inventing installed applications.
+2. Reuse the original font atlas, artwork, transitions and layout details to improve visual fidelity.
+3. Investigate supported Balatro capabilities independently before offering installation or application launching.
 
-For Foldrift:
+## Upstream and licenses
 
-```text
-SD:/iz2s/modules/foldrift/launcher.iza
-```
+Original project: [byizmysh/IZ2S-Platform](https://github.com/byizmysh/IZ2S-Platform). Upstream installation instructions and packaged releases are maintained there. Balatro Lua entry work draws on [Luminger/balatro-switch-rce](https://github.com/Luminger/balatro-switch-rce).
 
-For IZ2S Cheese:
-
-```text
-SD:/iz2s/modules/iz2s-cheese/launcher.iza
-```
-
-A PC download may be a package containing resources; do not simply rename that package to `launcher.iza`.
-
-BlitBun uses its panel tab to select a browser share or a PC window. Native window/audio capture uses Linux, FFmpeg, X11/XWayland and PulseAudio/PipeWire (`pactl`/`parec`). Browser sharing requires an explicit selection in the browser. VacooTube includes its PC application source, streaming server and, in the Linux archive, clean Electron runtimes for x64/ARM64. No browser profile or login is included. These Linux media helpers are not supported on Windows; application files remain available for installation to Switch. Book Reader imports TXT/EPUB through its panel settings. IZ2S Cheese uses a configured catalog and its own download interface.
-
-## IZPSX BIOS and games
-
-BIOS and game images are not included. Add your own **512 KiB (524,288-byte)** BIOS at:
-
-```text
-SD:/iz2s/modules/izpsx/bios/bios.bin
-```
-
-Put games in:
-
-```text
-SD:/iz2s/modules/izpsx/games/<game name>/
-```
-
-Keep each CUE file with all referenced BIN/IMG tracks; put PBP files in the same per-game layout.
-
-When updating, preserve settings and these folders:
-
-```text
-bios/
-games/
-saves/
-```
-
-The updated 0.5.2 native image and PC file interface both use these paths.
-
-## Connections and local state
-
-Select the input device and network adapters in the panel. Automatic discovery depends on a reachable local network; enter the device's displayed address when discovery is unavailable. Use the port actually shown in the console's FTP indicator; older installed runtimes can differ from the current **default of 1425**. Reopening the console menu is required to activate a newly installed native runtime.
-
-Personal settings, pairing keys and logs are created on first use under:
-
-```text
-data/
-```
-
-Or in the owning module's state directory. No credentials, Nintendo keys, BIOS, games, save files or previous sessions are supplied. Civ7 currently has no filesystem access; its Wi-Fi setup requires Linux networking tools. No delivery date is promised by this release.
-
-## Authors, upstream work and licenses
-
-**IZMYSH (@byizmysh)** authors and maintains IZ2S integration and the application adaptations. This project relies on work by many other authors; renaming an interface does not remove their authorship or license terms.
-
-- **BermTheSequel, pepsipu and kurumuz**: the ns2jb family and inherited console connection work. Exact retained origins/revisions are in the engine provenance and installer notices: [ns2jb2](https://gitlab.com/BermTheSequel/ns2jb2), [pepsipu/ns2jb](https://gitlab.com/pepsipu/ns2jb/), [kurumuz/ns2jb](https://gitlab.com/kurumuz/ns2jb).
-- **ouncebrew and contributors**: kaiHEN, libkaihen, libounce and related runtime components. Original names and notices are preserved for attribution in `engines/iz2s-core/runtime/package/licenses/` and runtime provenance. [kaiHEN](https://github.com/ouncebrew/kaihen).
-- **OunceVK, Mesa/NVK/Zink, devkitPro, switchbrew and their contributors**: graphics, native runtime and homebrew components. Individual component licenses apply; bundled texts include Mesa, libounce, libnx, nx-hbloader and nx-hbmenu.
-- **Gezine and the CivSwitch/LDN contributors**: Civilization VII integration. See `engines/CivSwitch/LICENSE` and `engines/CivSwitchLDN/LICENSES/`. [CivSwitch](https://github.com/Gezine/CivSwitch).
-- **misshexa66 and OunceCake contributors**: filesystem tooling. [OunceCake](https://github.com/misshexa66/OunceCake); original GPL notice retained in `core/filesystem/ouncecake/`.
-- **shy / shy1132 and VacuumTube contributors**: the MIT-licensed application underlying VacooTube. Its source copyright and license remain in `modules/VacooTube/app/`. [VacuumTube](https://github.com/shy1132/VacuumTube).
-- **hyln9 and nxhid contributors**: the Switch keyboard base. Firmware includes its MIT license, libnx and font notices. [nxhid](https://github.com/hyln9/nxhid).
-- **M5Stack, lovyan03, Benoit Blanchon, Ha Thach, Espressif and Arduino contributors**: Cardputer firmware dependencies, including M5Cardputer, M5Unified, M5GFX/LovyanGFX, ArduinoJson, TinyUSB, ESP-IDF, Arduino-ESP32 and IRremote. Versions and texts are retained with the firmware.
-- **DejaVu/Bitstream font authors, Monocypher authors, GitHub Octicons authors**, and the authors of Terser, Acorn, source-map, jridgewell mapping libraries and buffer-from: typography, signature verification, artwork and runtime JavaScript processing. Original notices remain beside their components.
-- **PCSX2, PCSX-ReARMed and their contributors**, plus VIXL, cubeb, SoundTouch, libchdr, fmt, ImGui, libzip, cpuinfo, simpleini, rcheevos, discord-rpc, plutosvg and plutovg authors: inherited statically linked runtime code. IZPSX is included; associated native dependency license texts are retained in `LICENSES/native-linked/`. Native source coverage is described in [SOURCES.md](SOURCES.md).
-- **Electron/Chromium, Node.js, Python, uv, Pillow, OpenSSH, FFmpeg and audio-stack contributors**: bundled or separately installed host dependencies. Electron's complete third-party HTML notice is preserved in each bundled runtime. Downloaded tools retain their own license terms.
-
-`LICENSE` and `COPYRIGHT` cover independently authored IZMYSH code under **GPL-2.0-or-later**. Explicit MIT components (including Foldrift and IZ2S Cheese), third-party code, fonts and prior grants retain their own licenses. This is not a blanket relicensing. See [LICENSE-SCOPE.md](LICENSE-SCOPE.md), [THIRD_PARTY.json](THIRD_PARTY.json), [AUTHORS.md](AUTHORS.md) and [LICENSES/INDEX.md](LICENSES/INDEX.md).
-
-The native runtime contains additional previously linked components, whose notices remain applicable. Their notices must be preserved. See [SOURCES.md](SOURCES.md) for the scope of the available native sources and [COMPATIBILITY.md](COMPATIBILITY.md) for platform support.
+Original authorship, component licenses and notices remain applicable. See [LICENSE](LICENSE), [LICENSE-SCOPE.md](LICENSE-SCOPE.md), [THIRD_PARTY.json](THIRD_PARTY.json), [AUTHORS.md](AUTHORS.md), [LICENSES/INDEX.md](LICENSES/INDEX.md) and [SOURCES.md](SOURCES.md).

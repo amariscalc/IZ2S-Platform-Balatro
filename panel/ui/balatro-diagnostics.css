@@ -1,0 +1,96 @@
+/* Balatro experimental diagnostics: loaded as a same-origin stylesheet under CSP style-src 'self'. */
+#setup .game-selector .game-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 740px) {
+  #setup .game-selector .game-buttons { grid-template-columns: 1fr; }
+}
+#setup.balatro-experimental > :not(.game-selector):not(#balatro-diagnostic-panel) {
+  display: none !important;
+}
+#setup.balatro-experimental #balatro-diagnostic-panel {
+  display: block !important;
+  margin-top: 16px !important;
+}
+#setup.balatro-experimental #balatro-diagnostic-panel > summary { display: none; }
+#setup.balatro-experimental #game-balatro {
+  outline: 2px solid #b0d838;
+  outline-offset: -2px;
+  background: #28341f;
+}
+#setup.balatro-experimental #game-sm4.selected,
+#setup.balatro-experimental #game-civ7.selected { background: #1d261e; }
+#balatro-diagnostic-panel .balatro-dashboard { padding: 10px 2px 22px; max-width: 880px; }
+#balatro-diagnostic-panel .balatro-dashboard h2 { margin: 0 0 8px; font-size: 1.4rem; }
+#balatro-diagnostic-panel .balatro-dashboard .balatro-note { color: #abb7ad; line-height: 1.5; }
+#balatro-diagnostic-panel .balatro-status {
+  padding: 14px 16px;
+  margin: 14px 0;
+  border: 1px solid #405044;
+  border-radius: 10px;
+  background: #1b241e;
+}
+#balatro-diagnostic-panel .balatro-status strong { display: block; margin-bottom: 5px; }
+#balatro-diagnostic-panel .balatro-caps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+#balatro-diagnostic-panel .balatro-cap {
+  border: 1px solid #354137;
+  border-radius: 9px;
+  padding: 12px;
+  background: #161d19;
+}
+#balatro-diagnostic-panel .balatro-cap span { display: block; color: #a9b6ab; font-size: .82rem; }
+#balatro-diagnostic-panel .balatro-cap strong { display: block; margin-top: 4px; }
+#balatro-diagnostic-panel .balatro-technical pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 320px;
+  overflow: auto;
+}
+@media (max-width: 580px) {
+  #balatro-diagnostic-panel .balatro-caps { grid-template-columns: 1fr; }
+}
+
+/* Diagnostic controls belong to the Balatro view, above the connection status. */
+#balatro-diagnostic-panel .balatro-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:16px 0; }
+#balatro-diagnostic-panel .balatro-controls label { margin-right:4px; }
+#balatro-diagnostic-panel .balatro-controls input { min-width:160px; max-width:270px; }
+#balatro-diagnostic-panel .balatro-controls button { min-width:150px; }
+
+/* The core panel re-selects SmileBASIC on refresh; Balatro owns visual selection in this view only. */
+#setup.balatro-experimental .game-selector #game-sm4,
+#setup.balatro-experimental .game-selector #game-sm4.selected,
+#setup.balatro-experimental .game-selector #game-civ7,
+#setup.balatro-experimental .game-selector #game-civ7.selected {
+  background: #1c261f !important;
+  border-color: #2c3830 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: #eff3ee !important;
+}
+#setup.balatro-experimental .game-selector #game-balatro {
+  background: #2a3821 !important;
+  border-color: #b0d838 !important;
+  outline: 2px solid #b0d838 !important;
+  box-shadow: none !important;
+}
+#balatro-diagnostic-panel .balatro-disconnect {
+  border: 1px solid #59695d;
+  color: #d5ded6;
+}
+
+/* Diagnostic panel must never bleed into SmileBASIC or Civilization VII. */
+#setup:not(.balatro-experimental) > #balatro-diagnostic-panel {
+  display: none !important;
+}
+
+#balatro-diagnostic-panel .balatro-app-panel { border-top:1px solid #415044; padding-top:18px; margin-top:18px; }
+#balatro-diagnostic-panel .balatro-app-buttons {display:flex;flex-wrap:wrap;gap:9px;margin:12px 0;}
+#balatro-diagnostic-panel .balatro-app-buttons button {min-width:125px;}
+#balatro-diagnostic-panel #balatro-app-status {min-height:1.5em;overflow-wrap:anywhere;}
