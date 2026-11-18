@@ -612,3 +612,28 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/persistent-memor
 ```
 
 The suite's `clear` is restricted to the registry it successfully initialized; if the command returns `already_initialized`, do not blindly delete state.
+
+### Verified persistent Lua handles vs. original IZ2S native-session requirements (2026-11-18)
+
+On the owner's Switch 2, `persistent-memory-suite.cjs` completed with `phase:"verified"`, **39 checks**, five handle allocations, quota/bounds/stale-handle checks, cross-RPC persistence and `registryCleared:true`. This closes the **title-local persistent buffer** question, but does **not** establish native process-memory transport.
+
+We inspected the original implementation paths `switch2/app/session.cjs`, `switch2/app/rpc.cjs`, `switch2/ro/nro.cjs`, and `switch2/ro/start-core.cjs`. The newly added static `readiness-gap.cjs` and its tests document these distinct requirements:
+
+1. Live original native session and `status.ready` for platform 2.
+2. Code-byte and executable-map validation for native `allocate`, `free`, `getService`, `send`, `close`, `memset`.
+3. Validated writable scratch memory; mapped/aligned native allocation; original saved-slot restoration.
+4. Address-based `read/write/query`, genuine mapping checks, and native free.
+5. Owned service handles, Horizon IPC transport, and well-formed replies.
+6. `ldr:ro` NRO mapping with RX/R/RW segment validation and subsequent unmapping.
+7. The native core's retained FS acquisition, `pm:shell` / `pm:dmnt` sessions, notifier proof, loader handle export and bootstrap synchronization.
+
+None of these prerequisites is implied by local Lua buffers or the verified Balatro `sock_error`/`memcpy` calls. The `createBalatroBackend().assessNativeReadiness()` helper returns a source-backed **offline**, fail-closed status summary. It does not call the console and is not an alternate loader. The native `read/write/query/store64/batch/openService/ipc/loadNro/startCore` backend operations deliberately remain `BALATRO_NATIVE_UNAVAILABLE`.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node -e "const {createBalatroBackend}=require('./engines/iz2s-core/runtime/installer/engine/switch2/balatro/backend.cjs'); console.log(JSON.stringify(createBalatroBackend().assessNativeReadiness(),null,2))"
+```
+
+This matrix is the grouped **next-stage checkpoint**: it prevents repeating the already-proven owned-memory experiments and defines the actual gaps before any claim of original NRO boot readiness.
