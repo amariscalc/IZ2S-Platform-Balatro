@@ -21,6 +21,7 @@
 | Fixed unprivileged Lua code execution in Balatro | **Verified on physical Switch 2** using `app-smoke.cjs` |
 | Whitelisted application RPC (`ping`, `runtime`, `math`) | **Verified on physical Switch 2**; 44/44 tests reported passing |
 | Static native startup compatibility report | Added; identifies current native readiness blockers without probing privileged memory |
+| Display an IZ2S application-layer banner on Switch 2 | Implemented via Balatro's existing logger; physical verification pending |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -48,6 +49,14 @@ Run the whitelisted, non-privileged Lua application command protocol:
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 ping
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 math 12
 ```
+
+Show an IZ2S application-layer status on the **Balatro console screen** (does not start the native core):
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-display.cjs 192.168.1.232
+```
+
+The command uses Balatro's own `bl.log` display; a reported `onConsole: true` acknowledges the log call. Verify the two `[IZ2S]` lines are actually visible on the Switch screen. It performs no native calls and does not alter game saves.
 
 Inspect the actual native-core requirements without running an exploit or touching the console:
 

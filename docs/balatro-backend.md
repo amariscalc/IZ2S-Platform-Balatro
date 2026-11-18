@@ -78,3 +78,7 @@ Run `node engines/iz2s-core/runtime/installer/engine/switch2/balatro/compatibili
 - `switch2/ro/start-core.cjs` depends on current privileged acquisition evidence, a verified FS notifier, retained memory and service sessions `pm:shell` and `pm:dmnt` before attempting staging/launch.
 
 No report, address, handle, or privilege state should be synthesized to satisfy these checks. The next architectural step is separating portable, application-level functionality from the native core's protected process dependencies.
+
+## On-console IZ2S application-layer display
+
+The upstream Balatro savedata launcher renders its own on-console status/log view in `bl.console` and records messages using `bl.log.log`. The new `app-display.cjs` sends a fixed Lua request to append an IZ2S application-layer banner and native-readiness warning to this existing display. Run `node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-display.cjs <console-ip>` and check the physical Switch screen. This is **not** an NRO loader, a native core launch or an elevated session; the output explicitly says so. No save, memory or IPC operations occur.
