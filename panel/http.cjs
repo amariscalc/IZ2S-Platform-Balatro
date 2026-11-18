@@ -76,6 +76,7 @@ async function createWindowServer({
   const assets = {
     '/reconnect.svg': ['reconnect.svg', 'image/svg+xml'],
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
+    '/balatro-diagnostics.js': ['balatro-diagnostics.js', 'text/javascript; charset=utf-8'],
     '/blitbun-capture.js': ['blitbun-capture.js', 'text/javascript; charset=utf-8'],
     '/storage.js': ['storage.js', 'text/javascript; charset=utf-8'],
     '/startup.js': ['startup.js', 'text/javascript; charset=utf-8'],
