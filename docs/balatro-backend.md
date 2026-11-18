@@ -82,3 +82,7 @@ No report, address, handle, or privilege state should be synthesized to satisfy 
 ## On-console IZ2S application-layer display
 
 The upstream Balatro savedata launcher renders its own on-console status/log view in `bl.console` and records messages using `bl.log.log`. The new `app-display.cjs` sends a fixed Lua request to append an IZ2S application-layer banner and native-readiness warning to this existing display. Run `node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-display.cjs <console-ip>` and check the physical Switch screen. This is **not** an NRO loader, a native core launch or an elevated session; the output explicitly says so. No save, memory or IPC operations occur.
+
+## Hardware verification: on-console display
+
+On 2026-11-18, the user confirmed that `app-display.cjs` produced the expected results **both on the Switch 2 display and in PowerShell**. This verifies that a Lua RPC request can write to the existing Balatro RCE launcher console via `bl.log.log`. It does not establish that a separate NRO process, hbmenu, native IZ2S core, or privileged IPC service started. The next implementation milestone is an application-layer lifecycle with explicit start/status/stop controls, not further connectivity smoke tests.
