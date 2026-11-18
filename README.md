@@ -383,3 +383,21 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/menu-navigation.
 ```
 
 Run only with Balatro's RPC server active. The script starts a temporary Lua overlay and stops it in a finally block. On an ambiguous timeout or error, do not retry blindly; first inspect the current application state with `app-session.cjs <ip> status`. A passing test demonstrates title-local menu navigation and RPC persistence only; `nativeCoreLaunched` and `ready` stay false.
+
+### Observe physical controller / overlay state in Balatro (2026-11-18)
+
+With Balatro RPC running, first execute the local tests and start the title-local Lua menu:
+
+```powershell
+node --test test/balatro-controller-observe.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/controller-observe.cjs 192.168.1.232
+```
+
+Check the Switch screen visually. Then press **D-pad Down** once on the physical controller and run `controller-observe.cjs` again. Repeat after **A**; compare `menu`, `steps` and `page` between observations. Use **B** to return from a detail page, then observe again. Finally run:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 stop
+```
+
+The observer only reads the Lua menu's state and whether its wrapper functions remain installed in `love.handlers` and `bl.console.draw`. `overlay: true` indicates the draw wrapper is attached, **not** that a frame is visibly rendered. `gamepad: true` indicates the handler wrapper is installed, **not** that physical button events reached it. `drawFault: false` means no drawing exception was recorded by the wrapper; it is not visual proof. An actual on-screen observation and button-driven state transition are still necessary. This experiment makes no native or FFI calls.
