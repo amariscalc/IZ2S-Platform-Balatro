@@ -1,7 +1,6 @@
 'use strict';
 (() => {
-  // Diagnostic-only UI selection; never modifies the main IZ2S loader setting.
-  const games = document.querySelector('.game-selector .game-buttons');
+  // UI-only diagnostic selection. Never changes IZ2S launcher settings.
   const smilebasic = document.getElementById('game-sm4');
   const civilization = document.getElementById('game-civ7');
   const details = document.getElementById('balatro-diagnostic-panel');
@@ -9,7 +8,7 @@
   const host = document.getElementById('balatro-audit-host');
   const result = document.getElementById('balatro-audit-result');
   const setup = document.getElementById('setup');
-  if (!games || !smilebasic || !civilization || !details || !btn || !host || !result || !setup) return;
+  if (!smilebasic || !civilization || !details || !btn || !host || !result || !setup) return;
 
   const balatro = document.createElement('button');
   balatro.id = 'game-balatro';
@@ -22,36 +21,29 @@
   style.textContent = `
     #setup.balatro-experimental > :not(.game-selector):not(#balatro-diagnostic-panel) { display:none !important; }
     #setup.balatro-experimental #balatro-diagnostic-panel { display:block; }
-    #game-balatro.selected { outline:2px solid #b0d838; outline-offset:-2px; }
+    #setup.balatro-experimental #game-balatro { outline:2px solid #b0d838;outline-offset:-2px; }
+    #setup.balatro-experimental #game-sm4,
+    #setup.balatro-experimental #game-civ7 { outline:none; }
+    #setup.balatro-experimental #game-sm4.selected,
+    #setup.balatro-experimental #game-civ7.selected { background:transparent; }
   `;
   document.head.appendChild(style);
 
-  let active = false;
-  function reflect() {
-    // Existing application render calls may update selected game buttons.
-    // Only touch attributes when needed to avoid mutation feedback loops.
-    setup.classList.toggle('balatro-experimental', active);
-    balatro.classList.toggle('selected', active);
-    const pressed = String(active);
-    if (balatro.getAttribute('aria-pressed') !== pressed) balatro.setAttribute('aria-pressed', pressed);
-    if (active) for (const game of [smilebasic, civilization]) {
-      game.classList.remove('selected');
-      if (game.getAttribute('aria-pressed') !== 'false') game.setAttribute('aria-pressed', 'false');
-    }
-  }
-  balatro.addEventListener('click', () => {
+  function selectBalatro() {
+    // No MutationObserver: IZ2S re-renders existing buttons frequently.
+    // Avoid changing those buttons' classes, which previously caused a render loop.
     if (smilebasic.disabled && civilization.disabled) return;
-    active = true;
+    setup.classList.add('balatro-experimental');
+    balatro.setAttribute('aria-pressed', 'true');
     details.open = true;
-    reflect();
-  });
-  for (const game of [smilebasic, civilization]) game.addEventListener('click', () => {
-    active = false;
-    reflect();
-  }, {capture: true});
-  const observer = new MutationObserver(() => { if (active) reflect(); });
-  observer.observe(smilebasic, {attributes:true,attributeFilter:['class','aria-pressed']});
-  observer.observe(civilization, {attributes:true,attributeFilter:['class','aria-pressed']});
+  }
+  function leaveBalatro() {
+    setup.classList.remove('balatro-experimental');
+    balatro.setAttribute('aria-pressed', 'false');
+  }
+  balatro.addEventListener('click', selectBalatro);
+  smilebasic.addEventListener('click', leaveBalatro, {capture:true});
+  civilization.addEventListener('click', leaveBalatro, {capture:true});
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
