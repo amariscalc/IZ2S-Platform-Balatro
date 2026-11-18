@@ -361,3 +361,14 @@ node --test test/balatro-mock-native-contract.test.cjs
 ```
 
 `mock-native-contract.cjs` uses a 4 KiB synthetic buffer and permits transfers of up to 256 bytes. Its only simulated call is `mock:add-u32`; service IPC, `ldr:ro`, native instruction verification, arbitrary calls, native stores and native batches are rejected. `nativeCompatible` and `ready` always remain false. A passing test confirms simulated interface behavior, not any real Switch privilege or native execution capability.
+
+### Live title-local Balatro RPC roundtrip (2026-11-18)
+
+This experiment is intentionally limited to an isolated Lua global in the running Balatro title. It sends three fixed commands across separate TCP connections: set a harmless integer (42), read it back, and clear it. No FFI, memory access, save modifications, privileged service, or NRO is involved.
+
+```powershell
+node --test test/balatro-rpc-roundtrip.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/rpc-roundtrip.cjs 192.168.1.232
+```
+
+The response parser rejects unexpected framing or state and no command is automatically retried. A best-effort clear command is sent after any attempted begin, including when its response is ambiguous. Success proves only Lua state persistence across Balatro RPC connections. It does not prove native transport compatibility or IZ2S core readiness.
