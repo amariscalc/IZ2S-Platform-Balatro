@@ -114,3 +114,7 @@ A new user-supplied Switch 2 photograph confirms the floating **IZ2S / BALATRO**
 ## Five-item interactive Lua menu (controller hardware pending)
 
 A menu is now drawn through the same existing `bl.console.draw` wrapper, and fixed RPC operations `up`, `down`, `select`, and `back` can navigate it. The menu presents ADD +1, ADD +5, STATUS, ABOUT, and STOP LUA APP. Input hook installation uses `love.handlers.gamepadpressed` (D-pad Up/Down, A, B) and `love.handlers.keypressed` as a fallback; unrelated events are delegated. Only handlers that still match IZ2S's wrapper are restored on shutdown. All menu actions are title-local Lua operations. A pending physical controller test is required before declaring controller navigation verified. The upstream Balatro RCE native-call compatibility layer does not on its own grant FS/PM sessions needed by native IZ2S startup.
+
+## Syntax regression fix (2026-11-18)
+
+The interactive menu client was unable to load because one generated JavaScript string line was missing a comma. On the user's PC, 55 tests passed while the two suites importing `app-session.cjs` failed to load, and all CLI operations failed before contacting the Switch. The Lua menu implementation is now a standalone `app-menu.lua` template. The Node client substitutes only fixed allowlisted commands and bounded step values, with generated-command tests and an explicit `node --check` CI step. Hardware gamepad navigation is still awaiting verification.

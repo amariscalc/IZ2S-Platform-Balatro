@@ -26,6 +26,7 @@
 | Balatro Lua app controls in the IZ2S web panel | Implemented; on-console RPC evidence observed, UI verification pending |
 | On-console graphical IZ2S Lua app overlay | **Verified on physical Switch 2 screen:** overlay rendered and displayed `STEPS: 5`; `overlay: attached` confirmed in PowerShell |
 | Five-item Lua menu and reversible gamepad input | **Implemented; awaiting Switch controller test** |
+| Menu-client JavaScript syntax | Missing comma fixed; Lua extracted to `app-menu.lua` with explicit CI syntax check |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -313,3 +314,7 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 
 ```
 
 The stop/start pair upgrades the previous graphical overlay to this menu; the RPC reply still reports Lua application state, not native IZ2S readiness.
+
+### 2026-11-18 syntax regression
+
+The first interactive-menu release contained a missing JavaScript comma immediately after `app.inputActive=attachInput()`. This caused `SyntaxError: Unexpected string` in `app-session.cjs` before any network operation. To prevent recurrence, the fixed Lua application has been moved to a separate `app-menu.lua` source file; `app-session.cjs` now substitutes only a validated operation from its eight-action allowlist and a bounded numeric step count. The CI workflow explicitly runs `node --check` before the Balatro suite. The new menu has not yet been tested on hardware; the previously confirmed graphical overlay is unaffected by this PC-side syntax regression.

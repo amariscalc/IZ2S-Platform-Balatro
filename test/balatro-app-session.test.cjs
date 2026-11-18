@@ -79,3 +79,16 @@ test('menu actions are bounded and cannot invoke native operations',()=>{
   assert.doesNotMatch(source,/love\.ffi|ffi\.|\.invoke\(|\.declare\(|pm:shell|pm:dmnt/);
  }
 });
+
+test('every generated Lua command is complete, bounded and based on one external template',()=>{
+ for(const operation of OPS){
+   const source=script(operation,operation==='step'?5:undefined);
+   assert.match(source,new RegExp('local operation="'+operation+'"'));
+   assert.match(source,/local function attachInput\(\)/);
+   assert.match(source,/local function shutdown\(\)/);
+   assert.ok(Buffer.byteLength(source)<=8192);
+   assert.doesNotMatch(source,/__OP__|__STEP__/);
+ }
+ assert.match(script('step',5),/local step=5/);
+ assert.match(script('start'),/local step=1/);
+});
