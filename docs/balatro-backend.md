@@ -106,3 +106,7 @@ Starting the title-local Lua app now attempts to attach a self-contained IZ2S ov
 ## 2026-11-18 overlay results and test regression
 
 On hardware, `start`, `step 5` and `status` each returned `overlay: attached`; the step counter advanced to 5. The reported automated run had 63 passes and one failure: a test searched for `require("bl.console")` while the implementation intentionally uses `pcall(require,"bl.console")`. The assertion has been corrected to match the protected module import. This failure was a test mismatch, not evidence that rendering failed. **Visible drawing of the overlay has not yet been confirmed by a Switch screen photo.**
+
+## 2026-11-18 graphical overlay: physical verification
+
+A new user-supplied Switch 2 photograph confirms the floating **IZ2S / BALATRO** graphical panel was actually drawn over the Balatro RCE console, displaying **LUA APP RUNNING — STEPS: 5** and **NATIVE CORE NOT LAUNCHED**. PowerShell in the same photograph returned `overlay: attached` for `start` and `step 5`. The console log also shows a prior `STOPPED - Lua component released` event followed by a new start. This verifies real title-local graphical rendering and display of updated application state; it does **not** by itself prove the renderer was visually removed immediately after Stop. No independent native core or elevated IPC session has been launched.
