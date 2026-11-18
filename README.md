@@ -828,3 +828,20 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.
 ```
 
 Do not start the earlier Balatro diagnostic menus in parallel. If a prior UI remains active, the focus view refuses to take over hooks. On an ambiguous timeout, read `status` before attempting another `start`. This port is safe to leave idle; its only purpose is to test faithful presentation/navigation under the title's LOVE API. The canonical native menu remains `canonicalMenuReady:false`.
+
+### Balatro ORBIT FOCUS: zero-frame repair and hook diagnosis (2026-11-19)
+
+The first hardware test returned `phase:"running"` but `renderedFrames:0`, `controllerEvents:0` and no visible UI. **This does not establish that the Lua port rendered.** The port now reports separate `drawHookInstalled`, `inputHookInstalled` and `drawCallbacks` counters, independently from successful `renderedFrames` and `drawErrors`. It also installs a **reversible `love.draw` fallback** alongside its `bl.console.draw` wrapper in case the console callback is not dispatched, without replacing the original source-derived layout. The fallback restores the previous `love.draw` only if it still owns the hook. It remains an experimental view and must not be mistaken for the native menu.
+
+Because these extra counters increased the Lua template beyond the RPC byte cap, `canonical-focus.cjs` now removes source-only full-line comments, empty lines, and leading indentation before transmitting it (preserving line boundaries). The composed payload is under 8192 bytes. Stop the existing port first so the old Lua closures are removed, then restart:
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-canonical-focus.test.cjs test/balatro-canonical-live-comparison.test.cjs test/balatro-canonical-entry.test.cjs test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
+```
+
+After checking the physical Switch screen and pressing left/right/A/B, read `status` again. **Interpretation:** `drawHookInstalled:true` with `drawCallbacks:0` means no observed invocation of either monitored draw callback; `drawCallbacks>0` with `drawErrors>0` indicates a drawing exception; `renderedFrames>0` establishes the Lua draw routine completed but still requires visual confirmation. Clean up using `canonical-focus.cjs <ip> stop`. If neither callback executes, we must inspect Balatro's render dispatch rather than declare success or repeatedly attempt native operations.
