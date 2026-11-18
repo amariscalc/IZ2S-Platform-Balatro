@@ -552,3 +552,20 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-lifecycle.
 ```
 
 Expected `state:"verified"` means this Lua-owned buffer lifecycle succeeded; `ready:false` and `nativeTransportReady:false` remain. The next genuine IZ2S transport gap is not ordinary Lua arrays, but the original session's controlled resource ownership plus mapping verification and IPC/loader prerequisites. Never treat this test as native NRO readiness.
+
+### One-command bounded owned-memory handle and SDK memcpy suite (2026-11-18)
+
+The Balatro backend now includes `owned-handles.cjs`, a bounded title-local Lua FFI handle registry exercised entirely within **one RPC request**. Each handle is a monotonically increasing integer, not a raw memory pointer. The test allocates two 32-byte arrays, writes and reads a predictable pattern, copies data between them, verifies the contents, rejects reads/writes beyond bounds, refuses copies within the same buffer, rejects stale and double-released handles, creates a replacement handle without recycling the old ID, and zeroes arrays on release.
+
+The handle registry is **local to that one diagnostic RPC chunk**; handles cannot be reused between RPC calls. `release` zeroes bytes and drops Lua references, which does not establish an explicit native heap `free()` call. This does not expose the unrestricted `read/write/query/store64` operations required by the original IZ2S native transport.
+
+For fewer separate tests, `memory-suite.cjs` now chains the previously verified 64-byte owned lifecycle, scoped handle guard tests and actual SDK `memcpy` between two self-owned 16-byte arrays. Each stage fails closed and prevents later probes on failure. The Balatro backend exposes `inspectOwnedHandles(host)` and `verifyMemorySuite(host)`. Both report `ready:false`, regardless of success.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-owned-handles.test.cjs test/balatro-memory-suite.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/memory-suite.cjs 192.168.1.232
+```
+
+Expected completion is `phase:"scoped-memory-verified"`, while `nativeTransportReady:false`, `ipcVerified:false`, `nroLoaderVerified:false`, and `nativeCoreReady:false` remain. This suite verifies owned, bounded buffers only. In case of an RPC timeout, title crash, or unexpected response, stop rather than blindly rerunning calls.
