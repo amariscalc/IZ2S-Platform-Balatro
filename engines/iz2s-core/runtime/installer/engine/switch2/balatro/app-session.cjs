@@ -22,24 +22,71 @@ function script(operation,value){
     '    pcall(logger.log,"[IZ2S APP] "..message)',
     '  end',
     'end',
+    'local function drawOverlay()',
+    '  if app.drawFault or rawget(_G,KEY)~=app then return end',
+    '  local g=love and love.graphics',
+    '  if type(g)~="table" or type(g.push)~="function" then return end',
+    '  local pushed=pcall(g.push,"all")',
+    '  if not pushed then return end',
+    '  local ok=pcall(function()',
+    '    local screenW,screenH=g.getDimensions()',
+    '    local w=math.floor(math.min(620,screenW*0.44))',
+    '    local h=132',
+    '    local x,y=math.floor(screenW*0.035),math.floor(screenH*0.22)',
+    '    g.setColor(0.09,0.13,0.10,0.97)',
+    '    g.rectangle("fill",x,y,w,h,8,8)',
+    '    g.setColor(0.69,0.91,0.22,1)',
+    '    g.rectangle("line",x,y,w,h,8,8)',
+    '    g.print("IZ2S  /  BALATRO",x+18,y+17)',
+    '    g.setColor(1,1,1,1)',
+    '    g.print("LUA APP RUNNING  -  STEPS: "..tostring(app.steps),x+18,y+54)',
+    '    g.print("NATIVE CORE NOT LAUNCHED",x+18,y+92)',
+    '  end)',
+    '  pcall(g.pop)',
+    '  if not ok then app.drawFault=true end',
+    'end',
+    'local function attachOverlay()',
+    '  local ok,console=pcall(require,"bl.console")',
+    '  if not ok or type(console)~="table" or type(console.draw)~="function" then return false end',
+    '  if app.overlayDraw and console.draw==app.overlayDraw then return true end',
+    '  if app.overlayDraw then return false end',
+    '  local previous=console.draw',
+    '  local function wrapper(...)',
+    '    previous(...)',
+    '    if rawget(_G,KEY)==app then pcall(drawOverlay) end',
+    '  end',
+    '  app.previousDraw,app.overlayDraw=previous,wrapper',
+    '  console.draw=wrapper',
+    '  return true',
+    'end',
     'if operation=="start" then',
     '  if not app then',
     '    app={id="balatro-lua-1",steps=0,active=true}',
     '    rawset(_G,KEY,app)',
     '    announce("STARTED - Lua component active")',
     '  end',
+    '  app.overlayActive=attachOverlay()',
     'elseif operation=="step" then',
     '  if app and app.active then',
     '    app.steps=app.steps+'+step,
     '    announce("STEP "..tostring(app.steps))',
     '  end',
     'elseif operation=="stop" then',
-    '  if app then announce("STOPPED - Lua component released") end',
+    '  if app then',
+    '    if app.overlayDraw then',
+    '      local ok,console=pcall(require,"bl.console")',
+    '      if ok and type(console)=="table" and console.draw==app.overlayDraw then',
+    '        console.draw=app.previousDraw',
+    '      end',
+    '    end',
+    '    announce("STOPPED - Lua component released")',
+    '  end',
     '  rawset(_G,KEY,nil)',
     '  app=nil',
     'end',
-    'if not app then return "IZ2S_SESSION_V1;phase=idle;steps=0;id=none" end',
-    'return "IZ2S_SESSION_V1;phase=running;steps="..tostring(app.steps)..";id="..app.id',
+    'if not app then return "IZ2S_SESSION_V1;phase=idle;steps=0;id=none;overlay=none" end',
+    'local overlay=app.overlayActive and "attached" or "unavailable"',
+    'return "IZ2S_SESSION_V1;phase=running;steps="..tostring(app.steps)..";id="..app.id..";overlay="..overlay',
   ];
   return fixed.join('\n');
 }
@@ -51,17 +98,21 @@ function parse(reply){
     const index=part.indexOf('=');
     if(index<1)throw Error('Invalid session reply field');
     const key=part.slice(0,index);
-    if(!['phase','steps','id'].includes(key)||Object.hasOwn(fields,key))
+    if(!['phase','steps','id','overlay'].includes(key)||Object.hasOwn(fields,key))
       throw Error('Unexpected session reply field');
     fields[key]=part.slice(index+1);
   }
-  if(Object.keys(fields).length!==3||!['running','idle'].includes(fields.phase)||
+  if((Object.keys(fields).length!==3&&Object.keys(fields).length!==4)||
+     (fields.overlay!==undefined&&!['attached','unavailable','none'].includes(fields.overlay))||
+     (fields.phase==='idle'&&fields.overlay&&fields.overlay!=='none')||
+     (fields.phase==='running'&&fields.overlay==='none')||
+     !['running','idle'].includes(fields.phase)||
      !/^\d{1,9}$/.test(fields.steps)||
      (fields.phase==='idle'&&(fields.id!=='none'||fields.steps!=='0'))||
      (fields.phase==='running'&&fields.id!=='balatro-lua-1'))
     throw Error('Invalid session response state');
   return {application:'IZ2S Balatro Lua',phase:fields.phase,
-    steps:Number(fields.steps),id:fields.id,scope:'title-local',
+    steps:Number(fields.steps),id:fields.id,overlay:fields.overlay??'unknown',scope:'title-local',
     nativeCoreLaunched:false,privilegedSessionVerified:false};
 }
 async function execute(host,operation,value,options={}){

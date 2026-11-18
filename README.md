@@ -23,7 +23,8 @@
 | Static native startup compatibility report | Added; identifies current native readiness blockers without probing privileged memory |
 | Display an IZ2S application-layer banner on Switch 2 | **Verified on physical Switch 2 and in PowerShell** via `app-display.cjs` |
 | Persistent, title-local IZ2S Lua lifecycle (`start/status/step/stop`) | **Verified on physical Switch 2:** start → status → step 5 → status → stop; 57/57 tests passing |
-| Balatro Lua app controls in the IZ2S web panel | Implemented, awaiting UI verification in browser |
+| Balatro Lua app controls in the IZ2S web panel | Implemented; on-console RPC evidence observed, UI verification pending |
+| On-console graphical IZ2S Lua app overlay | Reversible drawing integration implemented; **physical display verification pending** |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -60,6 +61,8 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 step 5
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 stop
 ```
+
+On **Start**, the component additionally tries to wrap Balatro's existing `bl.console.draw` method to show a live **IZ2S / BALATRO** graphical panel. **Step +5** changes the counter shown on that panel. **Stop** restores the original `console.draw` handler if our wrapper is still installed. The RPC result includes `overlay: attached|unavailable|none`; `attached` means that the drawing callback was installed, **not** that display output has been confirmed. If graphical rendering fails, the Lua RPC session remains usable. Hardware verification of the overlay is pending.
 
 The component is stored only in Balatro's running Lua global state, survives individual RPC connections but **not** game termination. It records start, step and stop events to the existing on-screen logger. It does not load hbmenu/NRO, call native SDK operations or modify privilege state. Check the output and the Switch screen before marking it verified.
 

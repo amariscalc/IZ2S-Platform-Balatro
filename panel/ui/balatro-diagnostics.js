@@ -177,7 +177,7 @@
       const data=await response.json();
       if(!response.ok)throw Error(data.error||'Balatro application action failed');
       appStatus.textContent='Lua application: '+data.phase+' · steps: '+data.steps+
-        ' · Native core: not launched';
+        ' · Overlay: '+data.overlay+' · Native core: not launched';
     }catch(error){
       appStatus.textContent='Application action failed: '+error.message;
     }finally{

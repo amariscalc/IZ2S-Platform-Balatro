@@ -36,3 +36,27 @@ test('reject inconsistent and spurious status fields',()=>{
   '-> error',
  ])assert.throws(()=>parse(s));
 });
+
+test('start attaches a reversible graphical overlay to Balatro console drawing',()=>{
+ const code=script('start');
+ assert.match(code, /require\("bl\.console"\)/);
+ assert.match(code, /local function drawOverlay\(\)/);
+ assert.match(code, /console\.draw=wrapper/);
+ assert.match(code, /app\.overlayActive=attachOverlay\(\)/);
+ assert.doesNotMatch(code, /love\.draw\s*=/);
+});
+test('stop restores only the renderer hook owned by IZ2S',()=>{
+ const code=script('stop');
+ assert.match(code, /console\.draw==app\.overlayDraw/);
+ assert.match(code, /console\.draw=app\.previousDraw/);
+ assert.match(code, /rawset\(_G,KEY,nil\)/);
+});
+test('overlay acknowledgment is distinct from native readiness',()=>{
+ const attached=parse('-> IZ2S_SESSION_V1;phase=running;steps=5;id=balatro-lua-1;overlay=attached');
+ assert.equal(attached.overlay,'attached');
+ assert.equal(attached.nativeCoreLaunched,false);
+ assert.equal(attached.privilegedSessionVerified,false);
+ assert.equal(parse('-> IZ2S_SESSION_V1;phase=running;steps=0;id=balatro-lua-1;overlay=unavailable').overlay,'unavailable');
+ assert.equal(parse('-> IZ2S_SESSION_V1;phase=idle;steps=0;id=none;overlay=none').overlay,'none');
+ assert.throws(()=>parse('-> IZ2S_SESSION_V1;phase=running;steps=0;id=balatro-lua-1;overlay=none'));
+});
