@@ -14,7 +14,8 @@ async function verify(host,options={},call=execute){
  const expect=async(op,args=[],state='ok',detail=null)=>{
   const r=await run(op,args);
   if(!r||r.state!==state||(detail&&r.detail!==detail))
-   throw Error('Registry expectation failed: '+op+' expected '+state+(detail?'/'+detail:''));
+   throw Error('Registry expectation failed: '+op+' expected '+state+(detail?'/'+detail:'')+
+    ', received '+JSON.stringify(r||null));
   return r.value;
  };
  try{
