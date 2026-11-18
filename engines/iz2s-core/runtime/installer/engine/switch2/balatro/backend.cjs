@@ -6,6 +6,7 @@ const {audit}=require('./diagnose.cjs');
 const {execute}=require('./app-session.cjs');
 const {observe}=require('./controller-observe.cjs');
 const {profile}=require('./ffi-profile.cjs');
+const {assessProfile}=require('./ffi-contract.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -47,6 +48,10 @@ function createBalatroBackend({
     },
     async inspectFfi(host,options){
       return ffiProfile(host,options);
+    },
+    async planFfi(host,declaration,options){
+      // Data-only assessment: this does not invoke FFI or expose a raw pointer.
+      return assessProfile(await ffiProfile(host,options),declaration);
     },
     nativeStatus(){
       return {
