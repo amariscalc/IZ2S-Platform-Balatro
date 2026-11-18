@@ -22,6 +22,7 @@
 | Whitelisted application RPC (`ping`, `runtime`, `math`) | **Verified on physical Switch 2**; 44/44 tests reported passing |
 | Static native startup compatibility report | Added; identifies current native readiness blockers without probing privileged memory |
 | Display an IZ2S application-layer banner on Switch 2 | **Verified on physical Switch 2 and in PowerShell** via `app-display.cjs` |
+| Persistent, title-local IZ2S Lua lifecycle (`start/status/step/stop`) | **Implemented; requires hardware verification** |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -49,6 +50,17 @@ Run the whitelisted, non-privileged Lua application command protocol:
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 ping
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 math 12
 ```
+
+Run the persistent IZ2S **Lua component** in Balatro. Start once, query from a new TCP connection, execute a step, then stop:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 status
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 step 5
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 stop
+```
+
+The component is stored only in Balatro's running Lua global state, survives individual RPC connections but **not** game termination. It records start, step and stop events to the existing on-screen logger. It does not load hbmenu/NRO, call native SDK operations or modify privilege state. Check the output and the Switch screen before marking it verified.
 
 Show an IZ2S application-layer status on the **Balatro console screen** (does not start the native core):
 

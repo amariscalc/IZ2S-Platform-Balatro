@@ -86,3 +86,9 @@ The upstream Balatro savedata launcher renders its own on-console status/log vie
 ## Hardware verification: on-console display
 
 On 2026-11-18, the user confirmed that `app-display.cjs` produced the expected results **both on the Switch 2 display and in PowerShell**. This verifies that a Lua RPC request can write to the existing Balatro RCE launcher console via `bl.log.log`. It does not establish that a separate NRO process, hbmenu, native IZ2S core, or privileged IPC service started. The next implementation milestone is an application-layer lifecycle with explicit start/status/stop controls, not further connectivity smoke tests.
+
+## Persistent Lua application lifecycle
+
+`app-session.cjs` now implements a fixed four-command lifecycle: `start`, `status`, `step` and `stop`. Instead of writing a banner and exiting, the code stores the application model in Balatro's process-local `_G.__IZ2S_BALATRO_APP_V1` table. The upstream `bl.repl.evaluate` runs each RPC chunk in the title's main Lua state and its environment delegates global lookups to `_G`. Each new TCP request therefore reads the same table while the Balatro game process remains running. Commands return a strict `IZ2S_SESSION_V1` response and write lifecycle events using `bl.log.log`. No native worker, game save modification or automatic frame loop is installed. A running status means **a Lua component table exists**, not that a native executable is running.
+
+Hardware verification of persistence across separate RPC requests is the next milestone.
