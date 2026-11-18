@@ -1,8 +1,50 @@
-# IZ2S Platform
+# IZ2S Platform — Balatro experimental fork
+
+## Balatro experimental backend (fork)
+
+> **Development branch only.** This fork adds a diagnostic-only Balatro connection mode to the IZ2S panel. It is **not** a usable IZ2S native launcher and must not be confused with an acquired privileged session. The original SmileBASIC and Civilization VII flows remain unchanged.
+
+### Verified and unverified features
+
+| Feature | Status |
+| --- | --- |
+| Balatro Lua RPC over TCP 9026 | Verified on Switch 2 FW 23.0.1 |
+| Lua 5.1 / LuaJIT 2.1 and FFI availability | Verified by real RPC introspection |
+| IZ2S panel diagnostics, experimental Balatro selection | Integrated; user-tested |
+| Separate Balatro diagnostic lifecycle (idle / checking / connected / unavailable) | Implemented; requires regression verification for this revision |
+| Local authenticated GET status snapshot | Implemented; read-only |
+| Native memory read/write, Horizon IPC, privileged access | **Not implemented or verified** |
+| Loading the IZ2S native core from Balatro | **Not implemented** |
+
+### Test the fork from source
+
+From your checkout of `feature/balatro-diagnostics-backend`, with Node.js 22+:
+
+```powershell
+node --test test/balatro-*.test.cjs
+node start.cjs --preview
+```
+
+Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications.
+
+A CLI alternative, with the RPC listener already active:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/diagnose.cjs 192.168.1.232
+```
+
+Use your console's actual address. Balatro's RPC is unauthenticated and unencrypted: use a trusted private LAN only. The panel checks private IPv4 addresses and requires its normal token. No credentials or save files belong in Git.
+
+**Current limitation:** `ready: false` is intentional. An available FFI function does not prove that the process can perform the privileged operations IZ2S requires.
+
+See [Balatro backend technical notes](docs/balatro-backend.md). Changes to this fork's Balatro backend should update this README in the same commit or push, keeping verified features and limitations accurate.
+
+---
+
 
 IZ2S is a Homebrew launcher for Nintendo Switch.
 
-## Download 0.25
+## Upstream IZ2S 0.25 downloads
 
 | System | Download |
 | --- | --- |

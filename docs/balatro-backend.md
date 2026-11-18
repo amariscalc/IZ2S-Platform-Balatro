@@ -32,6 +32,12 @@ node --test test/balatro-diagnostics.test.cjs
 - The new transport is not wired into a native-operation dispatch. No output may be passed off as an acquired/privileged session.
 - Balatro RPC is unauthenticated. Use only on a trusted LAN and close the game when finished.
 
+## Integrated panel lifecycle
+
+The experimental Balatro mode is available on the IZ2S **Connection** page. Its read-only backend tracks `idle`, `checking`, `connected` and `unavailable`, and the local panel now provides an authenticated `GET /api/balatro/status` snapshot (no console request). The explicit `POST /api/balatro/diagnose` endpoint performs the fixed Lua diagnostic using TCP 9026. All lifecycle snapshots retain `ready: false`.
+
+The view is isolated by a same-origin CSS file allowed under the panel CSP; the technical JSON is hidden in a collapsible panel. Selecting Balatro does not alter saved IZ2S loader settings.
+
 ## Next engineering milestone
 
-Add an explicit backend selector to application initialization and a read-only capability/status panel, while keeping native operations unavailable until they can be independently verified. Do not modify the original SmileBASIC IPC or weaken qualification checks.
+Develop and verify a genuinely compatible, unprivileged session protocol for Balatro and assess limitations before connecting any native operations. Keep the original SmileBASIC IPC and all qualification checks untouched. Avoid treating Lua FFI availability as proof of elevated access.

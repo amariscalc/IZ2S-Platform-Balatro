@@ -36,7 +36,12 @@
   const technicalTitle = document.createElement('summary');
   technicalTitle.textContent = 'Technical JSON';
   technical.append(technicalTitle, result);
-  dashboard.append(heading, notice, status, capabilities);
+  const controls = document.createElement('div');
+  controls.className = 'balatro-controls';
+  const inputLabel = details.querySelector('label[for="balatro-audit-host"]');
+  if (inputLabel) controls.append(inputLabel);
+  controls.append(host, btn);
+  dashboard.append(heading, notice, controls, status, capabilities);
   // Reuse original host input and audit button, but move the verbose JSON into
   // an explicitly collapsible technical section.
   const originalHint = details.querySelector('p.hint');
@@ -74,12 +79,27 @@
     setStatus('Balatro RPC connected', 'Lua diagnostics completed. IZ2S native engine remains unavailable.');
   }
 
+  async function restoreStatus() {
+    try {
+      const response = await fetch('/api/balatro/status', {
+        method:'GET', headers:{'x-iz-key':location.hash.slice(1)},
+      });
+      if (!response.ok) return;
+      const state = await response.json();
+      if (state.phase === 'checking') setStatus('Checking Balatro RPC…', 'A diagnostic is already in progress.');
+      else if (state.phase === 'connected') setStatus('Last check completed', 'Run Check Balatro RPC to verify current connectivity.');
+      else if (state.phase === 'unavailable') setStatus('Previous check failed', 'Run a new check when Balatro RPC is listening.');
+    } catch {
+      // Optional snapshot is never a prerequisite for showing the screen.
+    }
+  }
   function selectBalatro() {
     if (smilebasic.disabled && civilization.disabled) return;
     setup.classList.add('balatro-experimental');
     balatro.setAttribute('aria-pressed', 'true');
     details.open = true;
     if (!status.textContent) setStatus('Ready to check Balatro', 'Enter the console IP and select Check Balatro RPC.');
+    void restoreStatus();
   }
   function leaveBalatro() {
     setup.classList.remove('balatro-experimental');

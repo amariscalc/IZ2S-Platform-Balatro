@@ -208,6 +208,8 @@ async function createWindowServer({
           moduleErrors: inventory.errors,
         });
       }
+      if (req.method === 'GET' && url.pathname === '/api/balatro/status')
+        return reply(res, 200, balatroDiagnostics.snapshot());
       if (req.method === 'POST' && url.pathname === '/api/balatro/diagnose') {
         if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
         const data = await readBody(req, 1024);

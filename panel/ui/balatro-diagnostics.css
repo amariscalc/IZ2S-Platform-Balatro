@@ -56,3 +56,9 @@
 @media (max-width: 580px) {
   #balatro-diagnostic-panel .balatro-caps { grid-template-columns: 1fr; }
 }
+
+/* Diagnostic controls belong to the Balatro view, above the connection status. */
+#balatro-diagnostic-panel .balatro-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:16px 0; }
+#balatro-diagnostic-panel .balatro-controls label { margin-right:4px; }
+#balatro-diagnostic-panel .balatro-controls input { min-width:160px; max-width:270px; }
+#balatro-diagnostic-panel .balatro-controls button { min-width:150px; }

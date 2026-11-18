@@ -44,3 +44,17 @@ test('Balatro browser script is actually registered as a served panel asset',()=
   assert.match(js, /getElementById\(['"]balatro-audit-run['"]\)/);
   assert.match(js, /addEventListener\(['"]click['"]/);
 });
+
+test('status snapshot is a read-only lifecycle view', async () => {
+  let checks = 0;
+  const session = create({probe: async () => {checks++; return {capabilities:{lua:'Lua 5.1'}};}});
+  assert.equal(session.snapshot().phase,'idle');
+  const result = await session.run('192.168.1.232');
+  assert.equal(result.phase,'connected');
+  assert.equal(session.snapshot().phase,'connected');
+  assert.equal(session.snapshot().ready,false);
+  assert.equal(checks,1);
+  const status = session.snapshot();
+  assert.equal(status.ready,false);
+  assert.equal(checks,1);
+});

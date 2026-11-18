@@ -48,3 +48,12 @@ test('Balatro CSS is CSP-compatible and served by the panel', () => {
   assert.match(server, /['"]\/balatro-diagnostics\.css['"]\s*:/);
   assert.doesNotMatch(source, /document\.createElement\(['"]style['"]\)/);
 });
+
+test('read-only state route and controls belong to Balatro dashboard', () => {
+  assert.match(server, /\/api\/balatro\/status/);
+  assert.match(source, /fetch\('\/api\/balatro\/status'/);
+  assert.match(source, /controls\.append\(host, btn\)/);
+  assert.match(source, /dashboard\.append\(heading, notice, controls, status, capabilities\)/);
+  const css=fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.css'),'utf8');
+  assert.match(css, /\.balatro-controls/);
+});
