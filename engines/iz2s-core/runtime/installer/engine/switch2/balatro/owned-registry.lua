@@ -71,7 +71,14 @@ local function perform()
 end
 local worked,result=pcall(perform)
 if not worked then
- local errorName=tostring(result):match("(quota|stale_handle|bounds|invalid_byte|overlap_refused|invalid_handle|invalid_operation)")
- return reply("blocked",errorName or "operation_failed",0)
+ -- Lua patterns do not support regex alternation with '|'.
+ -- Match only our explicit internal error labels; never echo arbitrary errors.
+ local labels={"quota","stale_handle","bounds","invalid_byte",
+               "overlap_refused","invalid_handle","invalid_operation"}
+ local message=tostring(result)
+ for _,label in ipairs(labels) do
+  if message==label then return reply("blocked",label,0) end
+ end
+ return reply("blocked","operation_failed",0)
 end
 return reply("ok","none",result)
