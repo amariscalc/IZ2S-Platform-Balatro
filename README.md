@@ -661,3 +661,27 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cj
 ```
 
 The integration test **stops** the frontend on successful completion, so a blank overlay afterwards is expected. Do not run the integration suite while a manually started frontend is active; it will refuse to take ownership. This is an IZ2S-compatible **frontend presentation** on the Balatro Lua side, not the actual original IZ2S native process or privileged launcher.
+
+### Launcher consolidation: dynamic dashboard + frontend ownership + grouped integration (2026-11-18)
+
+The six-entry Balatro IZ2S frontend now shows **live title-local values**, rather than presenting prior test results as current system status. The Dashboard, RPC, Memory and Native panels read the live Lua `_G.__IZ2S_OWNED_REGISTRY_V1` registry (active buffer count and owned byte count, where present), display LuaJIT FFI-interface presence, and explicitly distinguish the unavailable native memory/IPC/NRO transport. These numbers reflect the **currently active owned registry**, not previously completed smoke tests. No native call is needed to render a panel.
+
+To avoid two UI wrappers competing for controller and draw hooks, **starting the new launcher refuses when the previous `__IZ2S_BALATRO_APP_V1` menu is active**, returning `phase:"blocked";page:"legacy"`. The RPC client treats that status as a real conflict; it does not forcibly stop the previous menu. `launcher-telemetry.cjs` is an additional **read-only** RPC probe that reports active/idle states for both menus, FFI interface presence, and live registry count/bytes (strictly bounded by four buffers and 512 bytes).
+
+`launcher-suite.cjs` is the **one-command, fail-closed aggregate check**: inspect state before changes, refuse an existing frontend, exercise the existing complete five-page navigation test with cleanup, inspect state after cleanup, and attach the seven-stage source-backed native-readiness gap. Its result intentionally distinguishes `visualRenderingObserved:false` and `controllerEventsObserved:false`: synthetic RPC navigation and the presence of hooks do not themselves prove the actual physical display or controller events. Check these manually when leaving the launcher open.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-launcher-*.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-suite.cjs 192.168.1.232
+```
+
+If the grouped check completes with `phase:"verified"`, launch the frontend **without automatic cleanup** for visual review:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-telemetry.cjs 192.168.1.232
+```
+
+Use D-pad, A, B; the current title-local values should change if its registry is in use. Stop with `launcher-menu.cjs ... stop` once finished. Do not start both UI frontends simultaneously; the new one refuses a legacy session rather than stealing its hooks. No `read/write/query/ipc/loadNro/startCore` transport is implemented by this batch.
