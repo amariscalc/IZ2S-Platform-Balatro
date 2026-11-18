@@ -17,6 +17,14 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  nativeCallSmoke:async(host,options)=>{
+   calls.push(['native-call',host,options]);
+   return {backend:'balatro',mode:'read-only-sdk-native-call',nativeCallVerified:true,ready:false};
+  },
+  ownedBufferSmoke:async(host,options)=>{
+   calls.push(['owned-buffer',host,options]);
+   return {backend:'balatro',mode:'self-owned-ffi-buffer',readWriteVerified:true,ready:false};
+  },
   declarationPreflight:async(host,options)=>{
    calls.push(['declaration-preflight',host,options]);
    return {backend:'balatro',mode:'native-declaration-only',closureConstructed:true,
@@ -74,6 +82,14 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(declared.ready,false);
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
   'ffi-names','bridge-preflight','declaration-preflight']);
+ const native=await backend.inspectNativeCall('192.168.1.232');
+ assert.equal(native.nativeCallVerified,true);
+ assert.equal(native.ready,false);
+ const owned=await backend.inspectOwnedBuffer('192.168.1.232');
+ assert.equal(owned.readWriteVerified,true);
+ assert.equal(owned.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
