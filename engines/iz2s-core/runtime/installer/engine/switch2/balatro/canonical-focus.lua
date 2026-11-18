@@ -97,23 +97,19 @@ local function attach()
  if not app.drawHook then
   local old=c.draw
   local function wrapper(...)
-   local result=old(...)
-   if rawget(_G,KEY)==app then
-    local worked=pcall(draw)
-    if not worked then countEvents("errors") end
+   local worked,result=pcall(old,...)
+   if not worked then
+    app.consoleFailures=math.min(999999999,(app.consoleFailures or 0)+1)
+    app.consoleLastError=tostring(result):sub(1,180)
    end
-   return result
+   if rawget(_G,KEY)==app then
+    app.consoleCalls=math.min(999999999,(app.consoleCalls or 0)+1)
+    local painted=pcall(draw)
+    if not painted then countEvents("errors") end
+   end
+   if worked then return result end
   end
   app.previousDraw=old;app.drawHook=wrapper;c.draw=wrapper
- end
- if type(love)=="table" and not app.loveDrawHook then
-  local prev=love.draw
-  app.previousLoveDraw=prev
-  app.loveDrawHook=function(...)
-   if type(prev)=="function" then prev(...) end
-   if rawget(_G,KEY)==app then pcall(draw) end
-  end
-  love.draw=app.loveDrawHook
  end
  local h=love and love.handlers
  if type(h)=="table" then
@@ -144,7 +140,6 @@ local function stop()
  if not app then return end
  local ok,c=pcall(require,"bl.console")
  if ok and type(c)=="table" and c.draw==app.drawHook then c.draw=app.previousDraw end
- if type(love)=="table" and love.draw==app.loveDrawHook then love.draw=app.previousLoveDraw end
  local h=love and love.handlers
  if type(h)=="table" then
   for name,hook in pairs(app.hooks or {}) do
@@ -156,10 +151,10 @@ end
 if OP=="start" then
  if not app and (type(rawget(_G,"__IZ2S_BALATRO_APP_V1"))=="table" or
                  type(rawget(_G,"__IZ2S_BALATRO_LAUNCHER_V1"))=="table") then
-  return "IZ2S_FOCUS_V1;phase=blocked;view=conflict;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0"
+  return "IZ2S_FOCUS_V1;phase=blocked;view=conflict;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0"
  end
  if not app then
-  app={model=Model.new(0,0),frames=0,inputs=0,errors=0,callbacks=0}
+  app={model=Model.new(0,0),frames=0,inputs=0,errors=0,callbacks=0,consoleCalls=0,consoleFailures=0}
   rawset(_G,KEY,app)
  end
  app.attached=attach()
@@ -175,7 +170,6 @@ end
 local hookOk=false
 local good,console=pcall(require,"bl.console")
 if good and type(console)=="table" and app.drawHook and console.draw==app.drawHook then hookOk=true end
-if type(love)=="table" and app.loveDrawHook and love.draw==app.loveDrawHook then hookOk=true end
 local inputOk=false
 local handlers=love and love.handlers
 if type(handlers)=="table" and type(app.hooks)=="table" then
@@ -187,4 +181,5 @@ return "IZ2S_FOCUS_V1;phase=running;view="..(app.model.picking and "picker" or "
  ";selected="..tostring(app.model.selected)..";installed="..tostring(app.model.installed)..
  ";frames="..tostring(app.frames)..";inputs="..tostring(app.inputs)..
  ";errors="..tostring(app.errors)..";drawhook="..(hookOk and "1" or "0")..
- ";inputhook="..(inputOk and "1" or "0")..";callbacks="..tostring(app.callbacks)
+ ";inputhook="..(inputOk and "1" or "0")..";callbacks="..tostring(app.callbacks)..
+ ";consolecalls="..tostring(app.consoleCalls)..";consolefailures="..tostring(app.consoleFailures)
