@@ -474,3 +474,15 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-bridge-ch
 The response reports `state` (unavailable/error/blocked/verified), `abi` (unavailable/rejected/accepted), `bridgeCodeBytesVerified` and `signatureCompilerAccepted`. No SDK function is called; `nativeOperationExecuted=false`, `nativeCoreReady=false` and `ready=false` by design. A verified bridge is **not** evidence that privileged services, Horizon IPC, executable allocation or the IZ2S NRO loader are available. Never substitute this report for the startup acquisition and session checks.
 
 Upstream reference: https://github.com/Luminger/balatro-switch-rce/blob/main/src/bl/ffi_call.lua (the `preflight` function). Unknown images must remain blocked; the upstream project warns about fatal LuaJIT cdata-call defects.
+
+### Guarded SDK declaration proof (2026-11-18)
+
+The experimental backend also exposes `inspectNativeDeclaration(host)`, implemented by `native-declare-check.cjs`. This **does call `love.ffi.declare`** only to construct a Lua closure for the known-image `socket(int,int,int)` SDK export identified by Balatro's own `app.info.off.socket`. It calls `love.ffi.native_ready()` **first** and refuses unknown image profiles and missing offsets. It describes the resulting closure and discards it. **It never invokes the declared function or opens a socket**. This verifies declaration creation, not native function execution.
+
+```powershell
+node --test test/balatro-native-bridge-check.test.cjs test/balatro-native-declare-check.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-bridge-check.cjs 192.168.1.232
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-declare-check.cjs 192.168.1.232
+```
+
+If the bridge preflight is blocked or reports an error, **do not** run the declaration probe. An unknown binary or absent image offsets must fail closed. Successful closure construction does not imply the application possesses the privilege to open restricted services, allocate executable memory or start the original IZ2S NRO.
