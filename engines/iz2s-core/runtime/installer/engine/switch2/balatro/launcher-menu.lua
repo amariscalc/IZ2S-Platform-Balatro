@@ -67,7 +67,8 @@ local function draw()
   g.print("BALATRO / LUA ONLY  -  CORE NOT STARTED",x+20,y+337)
  end)
  pcall(g.pop)
- if not ok then app.drawFault=true end
+ if not ok then app.drawFault=true;app.drawErrors=(app.drawErrors or 0)+1
+ else app.drawFrames=math.min(999999999,(app.drawFrames or 0)+1) end
 end
 local function hookDraw()
  local good,c=pcall(require,"bl.console")
@@ -121,6 +122,9 @@ local function hookInput()
    local key=name=="gamepadpressed" and b or a
    local action=map[key]
    if action and rawget(_G,KEY)==app then
+    if name=="gamepadpressed" then
+     app.gamepadEvents=math.min(999999999,(app.gamepadEvents or 0)+1)
+    else app.keyboardEvents=math.min(999999999,(app.keyboardEvents or 0)+1) end
     local ok=pcall(navigate,action)
     if ok then return end
    end
@@ -138,7 +142,8 @@ if OP=="start" then
   return "IZ2S_LAUNCHER_V1;phase=blocked;menu=0;page=legacy;overlay=false;controls=false"
  end
  if not app then
-  app={version=1,menu=1,page="home",drawFault=false}
+  app={version=1,menu=1,page="home",drawFault=false,
+   drawFrames=0,drawErrors=0,gamepadEvents=0,keyboardEvents=0}
   rawset(_G,KEY,app)
  end
  app.overlay=hookDraw()
