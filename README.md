@@ -706,3 +706,19 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cj
 ```
 
 A running frontend with increasing `renderedFrames`, increasing `physicalGamepadEvents` and zero `drawErrors` gives independent in-title evidence. If counters remain zero despite working visuals, inspect the actual draw/gamepad dispatch route rather than asserting success. Never run the auto-cleanup integration suite while the manually started menu is active. For all tests, `nativeCoreReady:false` remains unchanged.
+
+### Canonical console menu requirement — shared by all entry methods (2026-11-19)
+
+**Design correction:** The product goal is to display and operate the **same original IZ2S console launcher/menu**, regardless of entry method: SmileBASIC, Civilization VII, or Balatro. The Balatro `launcher-menu.lua` overlay built during preliminary RPC/graphics/input work is a **diagnostic only**, not that original menu. It must not be expanded into a separately invented application library or represented as success for this goal.
+
+Canonical implementation identified in the existing repository:
+
+- `core/console/sd-launcher/native/launcher.c` — actual native SD library/menu supervisor and input/display loop.
+- `core/console/sd-launcher/native/build/launcher.bin` and `manifest.json` — built image and layout for the canonical native supervisor.
+- `core/console/sd-launcher/bootstrap.cjs` and `runtime.cjs` — native supervisor preparation and runtime, with graphics and filesystem prerequisites.
+- `core/console/sd-launcher/mixed-menu.cjs` — arbitration between native menu and host display.
+- `engines/CivSwitch/launcher/app/shaders/launcher-layout.glsl` and `app-menu.glsl` — menu layout/navigation resources for that entry environment.
+
+**Architecture requirement:** adapt Balatro's entry into the established native console-launcher lifecycle and its shared assets/state, rather than implementing a lookalike in LOVE Lua. Existing verified Balatro RPC, input and overlay capabilities only confirm that the entry can communicate and render a diagnostic UI. They do not provide the mapped native code, original render context, filesystem access or service/IPC ownership expected by the canonical launcher.
+
+Next engineering gate: inventory the canonical launcher startup prerequisites and test which interfaces Balatro can satisfy *without* relying on raw-pointer guesses or adopting a different UI. Keep the authentic-launcher milestone blocked until the canonical binary/renderer is the thing actually displayed. Do not interpret the diagnostic `launcher-integration.cjs` result as the canonical IZ2S menu having launched.
