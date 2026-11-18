@@ -425,3 +425,16 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/ffi-profile.cjs 
 ```
 
 `implementation` is `Lua`, `C`, `missing` or `unknown`. `parameters` and `varargs` come from the game's Lua debug metadata, when available; LuaJIT/5.1 C wrappers may report no reliable argument count. Profile success is **not** proof of a callable SDK ABI, code execution, memory access, IPC or loader privileges. `ready` remains false.
+
+### Typed, symbolic Balatro FFI transport contract (2026-11-18)
+
+`switch2/balatro/ffi-contract.cjs` adds an independent, **data-only** declaration validator. It describes the candidate Lua wrapper contract `declare(returnType, argumentTypes, address)` and `invoke(...args)`, using symbolic `sdk:...` references instead of raw addresses. Invalid types, arbitrary fields, addresses expressed as numbers/hex pointers, and oversized argument lists are rejected.
+
+The Balatro backend now offers `planFfi(host, declaration)`, which first retrieves the real console's read-only FFI signature profile and produces a planning report. It intentionally does **not** resolve symbols, call `declare`, call `invoke`, or grant an executable transport. All native methods still return `BALATRO_NATIVE_UNAVAILABLE`.
+
+```powershell
+node --test test/balatro-ffi-contract.test.cjs test/balatro-backend.test.cjs
+node --test test/balatro-*.test.cjs
+```
+
+The allowed type labels are an **unverified candidate vocabulary** for adapting contracts in Node.js: they are not proof that Balatro accepts those exact spellings. A match between the observed Lua wrapper arity and the candidate signature does not verify the native ABI, actual SDK targets, memory operations, service IPC, permissions or startup. Keep `ready=false`.
