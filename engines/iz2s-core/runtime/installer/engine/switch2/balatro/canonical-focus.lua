@@ -106,6 +106,15 @@ local function attach()
   end
   app.previousDraw=old;app.drawHook=wrapper;c.draw=wrapper
  end
+ if type(love)=="table" and not app.loveDrawHook then
+  local prev=love.draw
+  app.previousLoveDraw=prev
+  app.loveDrawHook=function(...)
+   if type(prev)=="function" then prev(...) end
+   if rawget(_G,KEY)==app then pcall(draw) end
+  end
+  love.draw=app.loveDrawHook
+ end
  local h=love and love.handlers
  if type(h)=="table" then
   app.hooks=app.hooks or {}
@@ -135,6 +144,7 @@ local function stop()
  if not app then return end
  local ok,c=pcall(require,"bl.console")
  if ok and type(c)=="table" and c.draw==app.drawHook then c.draw=app.previousDraw end
+ if type(love)=="table" and love.draw==app.loveDrawHook then love.draw=app.previousLoveDraw end
  local h=love and love.handlers
  if type(h)=="table" then
   for name,hook in pairs(app.hooks or {}) do
@@ -165,6 +175,7 @@ end
 local hookOk=false
 local good,console=pcall(require,"bl.console")
 if good and type(console)=="table" and app.drawHook and console.draw==app.drawHook then hookOk=true end
+if type(love)=="table" and app.loveDrawHook and love.draw==app.loveDrawHook then hookOk=true end
 local inputOk=false
 local handlers=love and love.handlers
 if type(handlers)=="table" and type(app.hooks)=="table" then
