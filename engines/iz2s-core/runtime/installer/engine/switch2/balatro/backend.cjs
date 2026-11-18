@@ -23,6 +23,7 @@ const {execute:executeLauncher}=require('./launcher-menu.cjs');
 const {run:verifyLauncher}=require('./launcher-integration.cjs');
 const {inspect:inspectLauncherTelemetry}=require('./launcher-telemetry.cjs');
 const {inspect:inspectLauncherActivity}=require('./launcher-activity.cjs');
+const {gate:gateCanonicalLauncher}=require('./native-launch-gate.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -129,6 +130,9 @@ function createBalatroBackend({
     },
     async inspectLauncherActivity(host,options){
       return launcherActivity(host,options);
+    },
+    async inspectCanonicalLauncher(options){
+      return gateCanonicalLauncher(options);
     },
     assessNativeReadiness(){
       return assessReadinessGap();
