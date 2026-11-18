@@ -1,0 +1,26 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const html = fs.readFileSync(path.join(__dirname,'../panel/ui/panel.html'),'utf8');
+const source = fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.js'),'utf8');
+const server = fs.readFileSync(path.join(__dirname,'../panel/http.cjs'),'utf8');
+
+test('Balatro browser code is served and loaded after DOM exists', () => {
+  assert.match(html, /<script[^>]+src="\/balatro-diagnostics\.js\?v=/);
+  assert.match(server, /['"]\/balatro-diagnostics\.js['"]\s*:/);
+});
+test('experimental selector is created and opens only diagnostic view', () => {
+  assert.match(source, /balatro\.id\s*=\s*['"]game-balatro['"]/);
+  assert.match(source, /details\.open\s*=\s*true/);
+  assert.match(source, /balatroExperimental|balatro-experimental/);
+  assert.match(source, /aria-pressed/);
+});
+test('no launch commands or native calls in Balatro browser code', () => {
+  assert.doesNotMatch(source, /\/api\/start\b|\/api\/launch-settings\b|native_invoke\s*\(|love\.ffi\.invoke\s*\(/);
+});
+test('diagnostics stay authenticated via application token', () => {
+  assert.match(source, /['"]x-iz-key['"]\s*:\s*location\.hash\.slice\(1\)/);
+  assert.match(server, /req\.headers\[['"]x-iz-key['"]\]/);
+});
