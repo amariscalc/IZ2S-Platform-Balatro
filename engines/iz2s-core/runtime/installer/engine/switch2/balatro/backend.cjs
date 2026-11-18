@@ -5,6 +5,7 @@
 const {audit}=require('./diagnose.cjs');
 const {execute}=require('./app-session.cjs');
 const {observe}=require('./controller-observe.cjs');
+const {profile}=require('./ffi-profile.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -21,9 +22,10 @@ function createBalatroBackend({
   capabilityAudit=audit,
   menuExecute=execute,
   menuObserve=observe,
+  ffiProfile=profile,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
-    typeof menuObserve!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof menuObserve!=='function'||typeof ffiProfile!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -42,6 +44,9 @@ function createBalatroBackend({
     },
     async observe(host,options){
       return menuObserve(host,options);
+    },
+    async inspectFfi(host,options){
+      return ffiProfile(host,options);
     },
     nativeStatus(){
       return {
