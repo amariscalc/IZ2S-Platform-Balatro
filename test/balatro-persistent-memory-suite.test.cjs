@@ -18,8 +18,12 @@ function mock(){
   if(op==='clear'){registry=null;return ok(0);}
   if(op==='status')return ok([...registry.values()].reduce((sum,b)=>sum+b.length,0));
   if(op==='alloc'){
+   const size=args[0];
+   const used=[...registry.values()].reduce((sum,b)=>sum+b.length,0);
+   if(!Number.isInteger(size)||size<1||size>128||registry.size>=4||used+size>512)
+    return blocked('quota');
    const id=next++;
-   registry.set(id,new Uint8Array(args[0]));
+   registry.set(id,new Uint8Array(size));
    return ok(id);
   }
   if(op==='release'){
@@ -50,6 +54,8 @@ test('persists owned handles across RPC requests and cleans up state',async()=>{
  assert.equal(result.phase,'verified');
  assert.equal(result.persistentAcrossRpcConnections,true);
  assert.equal(result.boundsVerified,true);
+ assert.equal(result.allocationQuotasVerified,true);
+ assert.equal(result.handleCount,5);
  assert.equal(result.registryCleared,true);
  assert.equal(result.nativeTransportReady,false);
  assert.equal(result.ready,false);
