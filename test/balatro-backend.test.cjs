@@ -17,6 +17,14 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  ownedHandlesSmoke:async(host,options)=>{
+   calls.push(['owned-handles',host,options]);
+   return {backend:'balatro',mode:'scoped-owned-handles',boundsVerified:true,ready:false};
+  },
+  memorySuite:async(host,options)=>{
+   calls.push(['memory-suite',host,options]);
+   return {backend:'balatro',mode:'memory-capability-suite',phase:'scoped-memory-verified',ready:false};
+  },
   ownedLifecycleSmoke:async(host,options)=>{
    calls.push(['owned-lifecycle',host,options]);
    return {backend:'balatro',mode:'owned-lua-ffi-lifecycle',
@@ -101,6 +109,15 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(lifecycle.ready,false);
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
   'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer','owned-lifecycle']);
+ const handles=await backend.inspectOwnedHandles('192.168.1.232');
+ assert.equal(handles.boundsVerified,true);
+ assert.equal(handles.ready,false);
+ const suite=await backend.verifyMemorySuite('192.168.1.232');
+ assert.equal(suite.phase,'scoped-memory-verified');
+ assert.equal(suite.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
+  'owned-lifecycle','owned-handles','memory-suite']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
