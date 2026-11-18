@@ -329,3 +329,14 @@ node --test test/balatro-native-preflight.test.cjs
 ```
 
 The preflight checks only the presence and types of `love.ffi.declare`, `love.ffi.invoke`, and the title-local `bl.app.info.sdk_base`. It performs **no** FFI calls, SDK instruction verification, IPC requests, memory changes, service acquisition, or NRO loads. All native-launch qualification flags remain false. A reported bridge and SDK base are insufficient evidence for `ldr:ro` compatibility or native IZ2S startup. The preflight needs a hardware RPC run before any result can be claimed for this Switch.
+
+### Static native-loader compatibility audit (2026-11-18)
+
+Run from the repository root:
+
+```powershell
+node --test test/balatro-static-compatibility.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/static-compatibility.cjs > balatro-static-compatibility.json
+```
+
+The static audit reads existing source files only. It inventories nine groups of textual requirements in the Balatro Lua transport, original native RPC, session verification, `ldr:ro` loader and privileged core startup. A present source marker demonstrates only that the referenced code path exists, **not** that Balatro can execute it. The report always sets `ready: false`, `contactedConsole: false`, and `executedNativeCalls: false`. The preflight's four positive FFI interface checks do not establish native memory transport, executable mapping permissions, IPC services or a privilege acquisition channel. No changes are made to the original backends.
