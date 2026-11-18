@@ -66,3 +66,15 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 
 ```
 
 The expected math result for 12 is 145. This only verifies application-level command dispatch. No native IZ2S core or privileged IPC is involved.
+
+## Native IZ2S startup: concrete compatibility requirements
+
+The user has verified **44/44 local tests** and physical Balatro replies for `ping`, `runtime` and `math 12` (result 145). Those are meaningful evidence of a working Lua RPC path, but do not imply native readiness.
+
+Run `node engines/iz2s-core/runtime/installer/engine/switch2/balatro/compatibility.cjs` for a source-grounded requirements report. In particular:
+
+- `switch2/app/rpc.cjs` requires `call3`, `call4`, `read`, `write`, `query`, `verifyFunction`, `store64` and `batch`, which are not supplied by the title-local Lua diagnostic protocol.
+- `switch2/app/session.cjs` checks executable code bytes/mappings and owned scratch allocation before native operations.
+- `switch2/ro/start-core.cjs` depends on current privileged acquisition evidence, a verified FS notifier, retained memory and service sessions `pm:shell` and `pm:dmnt` before attempting staging/launch.
+
+No report, address, handle, or privilege state should be synthesized to satisfy these checks. The next architectural step is separating portable, application-level functionality from the native core's protected process dependencies.
