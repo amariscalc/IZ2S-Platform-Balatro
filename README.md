@@ -788,3 +788,18 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-live-c
 ```
 
 Run with the **existing Balatro RPC server** active on TCP 9026. This does not start/stop an overlay or change its state. A current expected outcome is `phase:"entry-observed-native-blocked"`, `firstBlockingStage:"native-rpc"`, seven `missingNativePrerequisites` and `canonicalMenuReady:false`. The original launcher binary itself is not executed by this diagnostic. A successful bootstrap requires concrete resource-ownership verification from the canonical path, not simply changing the reported flags.
+
+### Real Balatro Lua RPC boundary, without spoofing original native RPC (2026-11-19)
+
+`switch2/balatro/native-rpc-boundary.cjs` is the first concrete entry adapter for the canonical launcher integration. Its `status()` performs exactly one bounded, **read-only Lua RPC** to inspect presence of Balatro's FFI-ready function and SDK-base metadata. All address-based native operations required by the original `switch2/app/rpc.cjs` (including `read`, `write`, `query`, `call`, `verifyFunction`, and native service/IPC/loader operations) reject **locally before sending a request** with `IZ2S_NATIVE_TRANSPORT_UNAVAILABLE`.
+
+The canonical entry now provides `live <switch-ip>` using that real transport boundary alongside the existing offline image integrity check. This avoids treating title-local Lua access, the observed socket getter, or the 16-byte owned-FFI smoke test as a substitute for arbitrary address-aware native RPC. No executable memory allocation, privileged IPC, code mapping, supervisor thread or original display ownership is attempted. The diagnostic Balatro menu is not involved.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-native-rpc-boundary.test.cjs test/balatro-canonical-live-comparison.test.cjs test/balatro-canonical-entry.test.cjs test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-entry.cjs live 192.168.1.232
+```
+
+The live command requires an active Balatro RPC connection on TCP 9026 and **does not** start the original IZ2S menu. Passing checks establish the behavior and limits of the real Balatro entry adapter; native launcher readiness remains blocked until an authorized native transport can satisfy the original bootstrap contract with verified ownership.
