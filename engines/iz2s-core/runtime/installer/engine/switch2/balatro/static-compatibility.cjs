@@ -3,7 +3,7 @@
 // Source-only compatibility audit. Does not import or execute any native runtime.
 const fs=require('node:fs');
 const path=require('node:path');
-const ROOT=path.resolve(__dirname,'..');
+const ROOT=path.resolve(__dirname,'../..');
 const FILES=Object.freeze({
   balatroRpc:'switch2/balatro/rpc.cjs',
   preflight:'switch2/balatro/native-preflight.cjs',
