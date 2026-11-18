@@ -25,8 +25,19 @@ test('diagnostics stay authenticated via application token', () => {
   assert.match(server, /req\.headers\[['"]x-iz-key['"]\]/);
 });
 
-test('selector must never install a DOM mutation observer', () => {
-  assert.doesNotMatch(source, /new\\s+MutationObserver\\s*\\(/);
-  assert.match(source, /function selectBalatro\\s*\\(/);
-  assert.match(source, /function leaveBalatro\\s*\\(/);
+test('selector has no mutation observer or native launch actions', () => {
+  assert.doesNotMatch(source, /new\s+MutationObserver\s*\(/);
+  assert.match(source, /function selectBalatro\s*\(/);
+  assert.match(source, /function leaveBalatro\s*\(/);
+  assert.doesNotMatch(source, /\/api\/start\b|\/api\/launch-settings\b/);
+});
+test('Balatro mode isolates its own dashboard from original controls', () => {
+  assert.match(source, /#setup\.balatro-experimental > :not\(\.game-selector\):not\(#balatro-diagnostic-panel\)/);
+  assert.match(source, /dashboard\.className = 'balatro-dashboard'/);
+  assert.match(source, /capabilities\.className = 'balatro-caps'/);
+});
+test('technical JSON is collapsible and not the default view', () => {
+  assert.match(source, /technical\.className = 'balatro-technical'/);
+  assert.match(source, /technical\.open = false/);
+  assert.match(source, /technical\.append\(technicalTitle, result\)/);
 });
