@@ -5,7 +5,7 @@ function create({run=execute}={}){
   let busy=false;
   async function action({host,operation,value}){
     validateTarget(host);
-    if(!['start','status','step','stop'].includes(operation))throw Error('Unknown Balatro application action');
+    if(!['start','status','step','stop','up','down','select','back'].includes(operation))throw Error('Unknown Balatro application action');
     if(operation==='step'&&value!==5)throw Error('Only the fixed five-step action is supported');
     if(operation!=='step'&&value!==undefined)throw Error('Unexpected action argument');
     if(busy)throw Error('Balatro application action already in progress');

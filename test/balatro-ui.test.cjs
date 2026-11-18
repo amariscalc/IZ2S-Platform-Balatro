@@ -91,3 +91,10 @@ test('Balatro panel exposes an authenticated fixed lifecycle endpoint',()=>{
  assert.match(source, /Stop Lua app/);
  assert.match(source, /x-iz-key/);
 });
+
+test('web panel exposes interactive menu actions',()=>{
+ assert.match(source,/Menu ↑/);
+ assert.match(source,/Menu ↓/);
+ assert.match(source,/'select','Select'/);
+ assert.match(source,/'back','Back'/);
+});

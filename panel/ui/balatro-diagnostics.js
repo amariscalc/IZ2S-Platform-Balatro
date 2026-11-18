@@ -61,7 +61,7 @@
   appStatus.id = 'balatro-app-status';
   appStatus.setAttribute('role','status');
   appStatus.setAttribute('aria-live','polite');
-  for(const [operation,label] of [['start','Start Lua app'],['status','Check app status'],['step','Step +5'],['stop','Stop Lua app']]){
+  for(const [operation,label] of [['start','Start Lua app'],['status','Check app status'],['up','Menu ↑'],['down','Menu ↓'],['select','Select'],['back','Back'],['step','Step +5'],['stop','Stop Lua app']]){
     const actionButton=document.createElement('button');
     actionButton.type='button';
     actionButton.dataset.balatroApp=operation;

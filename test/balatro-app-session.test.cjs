@@ -2,8 +2,8 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {OPS,KEY,script,parse}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs');
-test('session has only four fixed lifecycle operations',()=>{
- assert.deepEqual(OPS,['start','status','step','stop']);
+test('session exposes fixed lifecycle and menu operations',()=>{
+ assert.deepEqual(OPS,['start','status','step','stop','up','down','select','back']);
  assert.throws(()=>script('eval'),/Unsupported/);
  assert.throws(()=>script('step',0),/step value/);
  assert.throws(()=>script('step',1001),/step value/);
@@ -59,4 +59,23 @@ test('overlay acknowledgment is distinct from native readiness',()=>{
  assert.equal(parse('-> IZ2S_SESSION_V1;phase=running;steps=0;id=balatro-lua-1;overlay=unavailable').overlay,'unavailable');
  assert.equal(parse('-> IZ2S_SESSION_V1;phase=idle;steps=0;id=none;overlay=none').overlay,'none');
  assert.throws(()=>parse('-> IZ2S_SESSION_V1;phase=running;steps=0;id=balatro-lua-1;overlay=none'));
+});
+
+test('graphical five-item menu and reversible controller hooks are generated',()=>{
+ const source=script('start');
+ assert.match(source,/STOP LUA APP/);
+ assert.match(source,/local gamepad=\{dpup="up",dpdown="down",a="select",b="back"\}/);
+ assert.match(source,/install\("gamepadpressed",gamepad\)/);
+ assert.match(source,/handlers\[name\]==pair.wrapper/);
+ assert.match(source,/handlers\[name\]=pair.original/);
+ assert.match(source,/return original\(a,b,\.\.\.\)/);
+ assert.match(source,/console\.draw=app\.previousDraw/);
+ assert.doesNotMatch(source,/love\.draw\s*=/);
+});
+test('menu actions are bounded and cannot invoke native operations',()=>{
+ for(const operation of ['up','down','select','back']){
+  const source=script(operation);
+  assert.match(source,/menuAction\(operation\)/);
+  assert.doesNotMatch(source,/love\.ffi|ffi\.|\.invoke\(|\.declare\(|pm:shell|pm:dmnt/);
+ }
 });

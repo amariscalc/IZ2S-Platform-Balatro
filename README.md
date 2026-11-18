@@ -25,6 +25,7 @@
 | Persistent, title-local IZ2S Lua lifecycle (`start/status/step/stop`) | **Verified on physical Switch 2:** start → status → step 5 → status → stop; 57/57 tests passing |
 | Balatro Lua app controls in the IZ2S web panel | Implemented; on-console RPC evidence observed, UI verification pending |
 | On-console graphical IZ2S Lua app overlay | **Verified on physical Switch 2 screen:** overlay rendered and displayed `STEPS: 5`; `overlay: attached` confirmed in PowerShell |
+| Five-item Lua menu and reversible gamepad input | **Implemented; awaiting Switch controller test** |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -36,7 +37,7 @@ node --test test/balatro-*.test.cjs
 node start.cjs --preview
 ```
 
-Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The new **IZ2S Lua application** panel exposes Start, Status, Step +5 and Stop controls, each forwarded through an authenticated, allowlisted local HTTP endpoint. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. On switching back to SmileBASIC or Civilization VII, the Balatro panel closes and is hidden by CSS even if previously expanded. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
+Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The new **IZ2S Lua application** panel exposes Start, Status, menu navigation (Up/Down/Select/Back), Step +5 and Stop controls, each forwarded through an authenticated, allowlisted local HTTP endpoint. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. On switching back to SmileBASIC or Civilization VII, the Balatro panel closes and is hidden by CSS even if previously expanded. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
 
 For a **single real application-level Lua execution test** inside Balatro (not the native IZ2S core), run:
 
@@ -299,3 +300,16 @@ Or in the owning module's state directory. No credentials, Nintendo keys, BIOS, 
 `LICENSE` and `COPYRIGHT` cover independently authored IZMYSH code under **GPL-2.0-or-later**. Explicit MIT components (including Foldrift and IZ2S Cheese), third-party code, fonts and prior grants retain their own licenses. This is not a blanket relicensing. See [LICENSE-SCOPE.md](LICENSE-SCOPE.md), [THIRD_PARTY.json](THIRD_PARTY.json), [AUTHORS.md](AUTHORS.md) and [LICENSES/INDEX.md](LICENSES/INDEX.md).
 
 The native runtime contains additional previously linked components, whose notices remain applicable. Their notices must be preserved. See [SOURCES.md](SOURCES.md) for the scope of the available native sources and [COMPATIBILITY.md](COMPATIBILITY.md) for platform support.
+
+### Interactive Lua menu on Switch 2 (experimental)
+
+The Balatro graphical overlay now shows five options: **ADD +1**, **ADD +5**, **STATUS**, **ABOUT**, and **STOP LUA APP**. It intercepts D-pad Up/Down plus **A** (select) / **B** (back) through a reversible wrapper of the existing LÖVE gamepad event dispatcher. Keyboard Up/Down/Enter/Escape is supported when available. The original event handlers receive unrelated input and are restored if they still belong to IZ2S at stop. It does not overwrite `love.draw`, call FFI or install an NRO. Hardware controller input is **not yet verified**. The same navigation can be exercised over RPC or the browser:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 stop
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 down
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 192.168.1.232 select
+```
+
+The stop/start pair upgrades the previous graphical overlay to this menu; the RPC reply still reports Lua application state, not native IZ2S readiness.

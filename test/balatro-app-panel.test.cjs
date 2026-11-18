@@ -27,3 +27,12 @@ test('panel releases command lock after failure',async()=>{
  await assert.rejects(app.action({host:'192.168.1.232',operation:'status'}),/offline/);
  assert.equal(calls,2);
 });
+
+test('fixed navigation actions accepted, extra arguments rejected',async()=>{
+ const calls=[];
+ const s=create({run:async(...args)=>{calls.push(args);return {phase:'running'};}});
+ for(const operation of ['up','down','select','back'])
+  await s.action({host:'192.168.1.232',operation});
+ assert.deepEqual(calls.map(a=>a[1]),['up','down','select','back']);
+ await assert.rejects(s.action({host:'192.168.1.232',operation:'select',value:1}),/Unexpected/);
+});
