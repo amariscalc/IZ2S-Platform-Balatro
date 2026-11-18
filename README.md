@@ -569,3 +569,18 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/memory-suite.cjs
 ```
 
 Expected completion is `phase:"scoped-memory-verified"`, while `nativeTransportReady:false`, `ipcVerified:false`, `nroLoaderVerified:false`, and `nativeCoreReady:false` remain. This suite verifies owned, bounded buffers only. In case of an RPC timeout, title crash, or unexpected response, stop rather than blindly rerunning calls.
+
+### Persistent bounded buffers across Balatro RPC connections (2026-11-18)
+
+`switch2/balatro/owned-registry.lua` is a LuaJIT-FFI buffer registry held in the title's `_G.__IZ2S_OWNED_REGISTRY_V1` state across separate TCP RPC requests. The exposed protocol takes only **opaque integer handle IDs, bounded offsets and byte values**, never raw addresses or arbitrary memory access. The registry allows at most four live buffers, each 1–128 bytes, and at most 512 bytes total. Handle IDs increase monotonically within the registry, and released IDs are never recycled. `release` zeroes the buffer and drops the Lua reference; `clear` zeroes all owned buffers and removes the registry. **Neither operation establishes native heap deallocation**.
+
+The `owned-registry.cjs` client supports `init`, `status`, `alloc`, `write`, `read`, `copy`, `release` and `clear`; reads/writes/copies are bounds checked and copies within the same buffer are refused. The test suite `persistent-memory-suite.cjs` exercises all these operations across separate RPC connections, including stale-handle rejection, out-of-range accesses, double release, non-recycled IDs and cleanup. A failed `init` (for example, an already initialized registry) **does not clear someone else's registry**. Following a successful `init`, test cleanup is best-effort on error; an RPC timeout must be investigated before retrying.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-owned-registry.test.cjs test/balatro-persistent-memory-suite.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/persistent-memory-suite.cjs 192.168.1.232
+```
+
+Expected successful phase: `"verified"` with `persistentAcrossRpcConnections:true`, `boundsVerified:true`, `registryCleared:true`. This confirms **title-local allocated data persistence** only: no native transport support is unlocked by these tests. `nativeTransportReady:false`, `ipcVerified:false`, `nativeCoreReady:false` remain. Existing IZ2S `read/write/query/store64` and loader methods remain blocked with `BALATRO_NATIVE_UNAVAILABLE`. This is not a native NRO launcher.
