@@ -18,7 +18,8 @@
 | Hide Balatro dashboard when selecting SmileBASIC or Civilization VII | Fixed via explicit close and same-origin CSS guard; awaiting browser verification |
 | SmileBASIC selection after Civilization VII | Handler now explicitly requests `izlauncher`; browser verification pending |
 | Native memory read/write, Horizon IPC, privileged access | **Not implemented or verified** |
-| Fixed unprivileged Lua code execution in Balatro | Smoke-test implementation added; hardware check pending |
+| Fixed unprivileged Lua code execution in Balatro | **Verified on physical Switch 2** using `app-smoke.cjs` |
+| Whitelisted application RPC (`ping`, `runtime`, `math`) | Implemented with mock tests; hardware check pending |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -39,6 +40,13 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-smoke.cjs 19
 ```
 
 The output confirms whether the fixed Lua application completed in the title. This test does not invoke FFI, use memory primitives or access privileged IPC.
+
+Run the whitelisted, non-privileged Lua application command protocol:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 ping
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 math 12
+```
 
 A CLI alternative, with the RPC listener already active:
 

@@ -55,3 +55,14 @@ The Balatro panel is visible **only** while the Balatro experimental view is act
 `app-smoke.cjs` executes a bounded Lua application inside the already-running Balatro title via port 9026. The reply is parsed strictly; the result never claims native IZ2S launch or privilege access. Run `node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-smoke.cjs <console-ip>`.
 
 The SmileBASIC selector explicitly restores `izlauncher` when switching from Civilization VII, rather than inheriting a stale variant.
+
+## Fixed application-level command protocol (v1)
+
+The fork now includes `app-runtime.cjs`, a **whitelisted, stateless Lua application protocol** that executes fixed commands in Balatro over the verified TCP Lua RPC transport. Supported commands are `ping`, `runtime`, and `math` (a bounded integer computation). Replies use `IZ2S_APP_V1` with strict command matching.
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 ping
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-runtime.cjs 192.168.1.232 math 12
+```
+
+The expected math result for 12 is 145. This only verifies application-level command dispatch. No native IZ2S core or privileged IPC is involved.
