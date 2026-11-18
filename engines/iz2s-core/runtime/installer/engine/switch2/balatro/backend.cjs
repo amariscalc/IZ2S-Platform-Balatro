@@ -22,6 +22,7 @@ const {assess:assessReadinessGap}=require('./readiness-gap.cjs');
 const {execute:executeLauncher}=require('./launcher-menu.cjs');
 const {run:verifyLauncher}=require('./launcher-integration.cjs');
 const {inspect:inspectLauncherTelemetry}=require('./launcher-telemetry.cjs');
+const {inspect:inspectLauncherActivity}=require('./launcher-activity.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -53,6 +54,7 @@ function createBalatroBackend({
   launcherExecute=executeLauncher,
   launcherIntegration=verifyLauncher,
   launcherTelemetry=inspectLauncherTelemetry,
+  launcherActivity=inspectLauncherActivity,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
     typeof menuObserve!=='function'||typeof ffiProfile!=='function'||typeof ffiNames!=='function'||
@@ -60,7 +62,7 @@ function createBalatroBackend({
     typeof memorySuite!=='function'||typeof ownedRegistry!=='function'||
     typeof persistentMemorySuite!=='function'||
     typeof launcherExecute!=='function'||typeof launcherIntegration!=='function'||
-    typeof launcherTelemetry!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof launcherTelemetry!=='function'||typeof launcherActivity!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -124,6 +126,9 @@ function createBalatroBackend({
     },
     async inspectLauncherTelemetry(host,options){
       return launcherTelemetry(host,options);
+    },
+    async inspectLauncherActivity(host,options){
+      return launcherActivity(host,options);
     },
     assessNativeReadiness(){
       return assessReadinessGap();
