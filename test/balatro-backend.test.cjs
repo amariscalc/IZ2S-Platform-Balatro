@@ -48,10 +48,10 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(plan.observedSignatureMatches,true);
  assert.equal(plan.invocationVerified,false);
  assert.equal(plan.ready,false);
- assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile','ffi-names']);
  const names=await backend.inspectFfiNames('192.168.1.232');
  assert.equal(names.mode,'read-only-ffi-names');
  assert.equal(names.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile','ffi-names']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
