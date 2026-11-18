@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {KEY,OPS,script,parse,execute}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-registry.cjs');
+const {KEY,OPS,TEMPLATE,script,parse,execute}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-registry.cjs');
 function reply(op,state='ok',detail='none',value=0){
  return `-> IZ2S_REG_V1;op=${op};state=${state};detail=${detail};value=${value}`;
 }
@@ -57,4 +57,11 @@ test('Lua error classifier uses plain recognized labels and no regex alternation
  assert.doesNotMatch(lua,/match\("\(quota\|/);
  assert.match(lua,/message:match\("\(\[%a_\]\+\)\$"\)/);
  assert.match(lua,/if tail==label then return reply\("blocked",label,0\) end/);
+});
+
+test('default status without arguments is a valid fixed template',()=>{
+ const source=script('status',[]);
+ assert.equal(source,TEMPLATE);
+ assert.match(source,/local OP="status"/);
+ assert.match(source,/local A=0/);
 });
