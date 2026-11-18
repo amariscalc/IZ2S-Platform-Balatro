@@ -102,3 +102,7 @@ The IZ2S panel now exposes four buttons that call authenticated `POST /api/balat
 ## Reversible graphical application panel (hardware verification pending)
 
 Starting the title-local Lua app now attempts to attach a self-contained IZ2S overlay to the **existing** Balatro `bl.console.draw` callback. The overlay draws only after the original console view, and the supplied `step` count is reflected on-screen. It uses `love.graphics` with push/pop state restoration, is protected by `pcall` and contains no native or filesystem operations. Stopping the component restores `console.draw` **only if** the current renderer is still the wrapper installed by this session. The existing `love.draw` and `bl.hooks` remain unmodified. An `overlay: attached` RPC response confirms hook registration but cannot itself verify that a graphical frame was presented. A photo of the Switch screen is needed to confirm final rendering. The output expressly states that the native IZ2S core has not launched.
+
+## 2026-11-18 overlay results and test regression
+
+On hardware, `start`, `step 5` and `status` each returned `overlay: attached`; the step counter advanced to 5. The reported automated run had 63 passes and one failure: a test searched for `require("bl.console")` while the implementation intentionally uses `pcall(require,"bl.console")`. The assertion has been corrected to match the protected module import. This failure was a test mismatch, not evidence that rendering failed. **Visible drawing of the overlay has not yet been confirmed by a Switch screen photo.**

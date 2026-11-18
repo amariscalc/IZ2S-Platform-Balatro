@@ -39,7 +39,7 @@ test('reject inconsistent and spurious status fields',()=>{
 
 test('start attaches a reversible graphical overlay to Balatro console drawing',()=>{
  const code=script('start');
- assert.match(code, /require\("bl\.console"\)/);
+ assert.match(code, /pcall\(require,"bl\.console"\)/);
  assert.match(code, /local function drawOverlay\(\)/);
  assert.match(code, /console\.draw=wrapper/);
  assert.match(code, /app\.overlayActive=attachOverlay\(\)/);
