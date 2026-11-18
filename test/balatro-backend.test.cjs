@@ -18,7 +18,9 @@ function fixture(){
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
   ffiProfile:async(host,options)=>{
-   calls.push(['ffi-profile',host,options]);return {mode:'read-only-ffi-profile',ready:false};
+   calls.push(['ffi-profile',host,options]);return {backend:'balatro',mode:'read-only-ffi-profile',ready:false,
+    declare:{implementation:'Lua',parameters:3,varargs:false},
+    invoke:{implementation:'Lua',parameters:1,varargs:true}};
   },
  });
  return {backend,calls};
@@ -37,6 +39,13 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(ffi.mode,'read-only-ffi-profile');
  assert.equal(ffi.ready,false);
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile']);
+ const plan=await backend.planFfi('192.168.1.232',{
+  returnType:'u32',argumentTypes:[],address:'sdk:example'
+ });
+ assert.equal(plan.observedSignatureMatches,true);
+ assert.equal(plan.invocationVerified,false);
+ assert.equal(plan.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
