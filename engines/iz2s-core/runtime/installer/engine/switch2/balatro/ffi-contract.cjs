@@ -1,7 +1,9 @@
 'use strict';
 // Data-only FFI declaration compatibility planning.
 // Signature is observed on the console; meanings of types/ABI remain unverified.
-const MAX_PARAMS=8;
+const MAX_INTEGER_ARGS=8;
+const MAX_FLOAT_ARGS=8;
+const MAX_PARAMS=MAX_INTEGER_ARGS+MAX_FLOAT_ARGS;
 const SIGNATURE=Object.freeze({
   declare:Object.freeze(['returnType','argumentTypes','address']),
   invoke:Object.freeze(['...arguments']),
@@ -17,6 +19,10 @@ function validateDeclaration(input){
   if(!Array.isArray(input.argumentTypes)||input.argumentTypes.length>MAX_PARAMS||
     input.argumentTypes.some(t=>!SUPPORTED_TYPES.includes(t)||t==='void'))
     throw Error('Unsupported argument type list');
+  const floating=input.argumentTypes.filter(t=>t==='f32'||t==='f64').length;
+  const integer=input.argumentTypes.length-floating;
+  if(integer>MAX_INTEGER_ARGS||floating>MAX_FLOAT_ARGS)
+    throw Error('Candidate AArch64 register class limit exceeded');
   // This is a descriptive label only, not a raw function pointer.
   if(typeof input.address!=='string'||!/^sdk:[a-z][a-z0-9_-]{0,63}$/.test(input.address))
     throw Error('Expected symbolic SDK reference (never a raw address)');
@@ -47,4 +53,4 @@ function assessProfile(profile,declaration){
       : 'Wrapper arity differs from the candidate contract; native adapter cannot assume this signature.',
   };
 }
-module.exports={MAX_PARAMS,SIGNATURE,SUPPORTED_TYPES,validateDeclaration,assessProfile};
+module.exports={MAX_PARAMS,MAX_INTEGER_ARGS,MAX_FLOAT_ARGS,SIGNATURE,SUPPORTED_TYPES,validateDeclaration,assessProfile};
