@@ -1,6 +1,8 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 const {KEY,OPS,script,parse,execute}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-registry.cjs');
 function reply(op,state='ok',detail='none',value=0){
  return `-> IZ2S_REG_V1;op=${op};state=${state};detail=${detail};value=${value}`;
@@ -47,4 +49,12 @@ test('RPC transmits fixed operation and never exposes a pointer',async()=>{
  assert.equal(calls,1);
  assert.equal(r.value,8);
  assert.equal(r.ready,false);
+});
+
+test('Lua error classifier uses plain recognized labels and no regex alternation',()=>{
+ const lua=fs.readFileSync(path.join(__dirname,
+  '../engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-registry.lua'),'utf8');
+ assert.doesNotMatch(lua,/match\("\(quota\|/);
+ assert.match(lua,/message:match\("\(\[%a_\]\+\)\$"\)/);
+ assert.match(lua,/if tail==label then return reply\("blocked",label,0\) end/);
 });
