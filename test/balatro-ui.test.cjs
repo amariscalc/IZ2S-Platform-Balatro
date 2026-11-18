@@ -82,3 +82,12 @@ test('SmileBASIC handler explicitly restores izlauncher after Civ VII',()=>{
  const app=fs.readFileSync(path.join(__dirname,'../panel/ui/app.js'),'utf8');
  assert.match(app, /\$\('game-sm4'\)\.onclick=\(\)=>act\('\/api\/launch-settings',\{loaderId:'iz2s-core',variant:'izlauncher'\}\)/);
 });
+
+test('Balatro panel exposes an authenticated fixed lifecycle endpoint',()=>{
+ assert.match(server, /\/api\/balatro\/app/);
+ assert.match(source, /fetch\('\/api\/balatro\/app'/);
+ assert.match(source, /Start Lua app/);
+ assert.match(source, /Step \+5/);
+ assert.match(source, /Stop Lua app/);
+ assert.match(source, /x-iz-key/);
+});

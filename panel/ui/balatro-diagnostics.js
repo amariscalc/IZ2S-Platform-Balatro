@@ -48,6 +48,28 @@
   disconnectButton.textContent = 'Clear RPC session';
   controls.append(disconnectButton);
   dashboard.append(heading, notice, controls, status, capabilities);
+  const appPanel = document.createElement('section');
+  appPanel.className = 'balatro-app-panel';
+  const appTitle = document.createElement('h3');
+  appTitle.textContent = 'IZ2S Lua application';
+  const appNote = document.createElement('p');
+  appNote.className = 'balatro-note';
+  appNote.textContent = 'Runs inside Balatro only. Does not launch the native IZ2S core.';
+  const appButtons = document.createElement('div');
+  appButtons.className = 'balatro-app-buttons';
+  const appStatus = document.createElement('p');
+  appStatus.id = 'balatro-app-status';
+  appStatus.setAttribute('role','status');
+  appStatus.setAttribute('aria-live','polite');
+  for(const [operation,label] of [['start','Start Lua app'],['status','Check app status'],['step','Step +5'],['stop','Stop Lua app']]){
+    const actionButton=document.createElement('button');
+    actionButton.type='button';
+    actionButton.dataset.balatroApp=operation;
+    actionButton.textContent=label;
+    appButtons.append(actionButton);
+  }
+  appPanel.append(appTitle,appNote,appButtons,appStatus);
+  dashboard.append(appPanel);
   // Reuse original host input and audit button, but move the verbose JSON into
   // an explicitly collapsible technical section.
   const originalHint = details.querySelector('p.hint');
@@ -139,6 +161,30 @@
   smilebasic.addEventListener('click', leaveBalatro, {capture:true});
   civilization.addEventListener('click', leaveBalatro, {capture:true});
 
+  appButtons.addEventListener('click', async (event) => {
+    const target = event.target.closest('button[data-balatro-app]');
+    if (!target || appButtons.dataset.busy==='true') return;
+    appButtons.dataset.busy='true';
+    for(const item of appButtons.querySelectorAll('button'))item.disabled=true;
+    const operation=target.dataset.balatroApp;
+    appStatus.textContent='Running '+operation+'…';
+    try {
+      const response=await fetch('/api/balatro/app',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-iz-key':location.hash.slice(1)},
+        body:JSON.stringify({host:host.value.trim(),operation,...(operation==='step'?{value:5}:{})}),
+      });
+      const data=await response.json();
+      if(!response.ok)throw Error(data.error||'Balatro application action failed');
+      appStatus.textContent='Lua application: '+data.phase+' · steps: '+data.steps+
+        ' · Native core: not launched';
+    }catch(error){
+      appStatus.textContent='Application action failed: '+error.message;
+    }finally{
+      appButtons.dataset.busy='false';
+      for(const item of appButtons.querySelectorAll('button'))item.disabled=false;
+    }
+  });
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     capabilities.replaceChildren();

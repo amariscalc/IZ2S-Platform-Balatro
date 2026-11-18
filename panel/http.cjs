@@ -95,6 +95,7 @@ async function createWindowServer({
   const corePanel = require('../engines/iz2s-core/panel.cjs');
   const coreController = corePanel.create({root, manager, out: coreOut, sdStore:coreSdStore});
   const balatroDiagnostics = require('./balatro-diagnostics.cjs').create();
+  const balatroApp = require('./balatro-app.cjs').create();
   const withCoreSd = async value => {
     const coreSd=await coreController.sdStore.status();
     return coreSd.selected?{...value,coreSd}:value;
@@ -207,6 +208,14 @@ async function createWindowServer({
           modules: inventory.modules.map((m) => m.descriptor).filter(require('../core/packages/store-catalog.cjs').visible),
           moduleErrors: inventory.errors,
         });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/balatro/app') {
+        if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
+        const body = await readBody(req, 512);
+        if (!body || typeof body.host !== 'string' || typeof body.operation !== 'string' ||
+          Object.keys(body).some(key => !['host','operation','value'].includes(key)))
+          return reply(res, 400, {error: 'Expected Balatro host and action'});
+        return reply(res, 200, await balatroApp.action(body));
       }
       if (req.method === 'GET' && url.pathname === '/api/balatro/status')
         return reply(res, 200, balatroDiagnostics.snapshot());

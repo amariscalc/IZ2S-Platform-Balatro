@@ -89,3 +89,8 @@
 #setup:not(.balatro-experimental) > #balatro-diagnostic-panel {
   display: none !important;
 }
+
+#balatro-diagnostic-panel .balatro-app-panel { border-top:1px solid #415044; padding-top:18px; margin-top:18px; }
+#balatro-diagnostic-panel .balatro-app-buttons {display:flex;flex-wrap:wrap;gap:9px;margin:12px 0;}
+#balatro-diagnostic-panel .balatro-app-buttons button {min-width:125px;}
+#balatro-diagnostic-panel #balatro-app-status {min-height:1.5em;overflow-wrap:anywhere;}

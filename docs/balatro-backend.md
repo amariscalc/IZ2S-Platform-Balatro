@@ -92,3 +92,9 @@ On 2026-11-18, the user confirmed that `app-display.cjs` produced the expected r
 `app-session.cjs` now implements a fixed four-command lifecycle: `start`, `status`, `step` and `stop`. Instead of writing a banner and exiting, the code stores the application model in Balatro's process-local `_G.__IZ2S_BALATRO_APP_V1` table. The upstream `bl.repl.evaluate` runs each RPC chunk in the title's main Lua state and its environment delegates global lookups to `_G`. Each new TCP request therefore reads the same table while the Balatro game process remains running. Commands return a strict `IZ2S_SESSION_V1` response and write lifecycle events using `bl.log.log`. No native worker, game save modification or automatic frame loop is installed. A running status means **a Lua component table exists**, not that a native executable is running.
 
 Hardware verification of persistence across separate RPC requests is the next milestone.
+
+## Physical Lua session verification and panel integration
+
+The user confirmed 57/57 Node tests passing and physical Switch 2 outputs for `start`, `status`, `step 5`, `status`, `stop`, yielding running 0, running 0, running 5, running 5 and idle 0 respectively. This verifies title-local state persistence across RPC connections.
+
+The IZ2S panel now exposes four buttons that call authenticated `POST /api/balatro/app`. The server validates a private LAN address, the exact operation allowlist and the fixed step count, and serializes requests to the existing Balatro Lua session executor. Neither this endpoint nor its UI can invoke arbitrary Lua, native memory or kernel services. Browser confirmation is still pending.

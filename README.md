@@ -22,7 +22,8 @@
 | Whitelisted application RPC (`ping`, `runtime`, `math`) | **Verified on physical Switch 2**; 44/44 tests reported passing |
 | Static native startup compatibility report | Added; identifies current native readiness blockers without probing privileged memory |
 | Display an IZ2S application-layer banner on Switch 2 | **Verified on physical Switch 2 and in PowerShell** via `app-display.cjs` |
-| Persistent, title-local IZ2S Lua lifecycle (`start/status/step/stop`) | **Implemented; requires hardware verification** |
+| Persistent, title-local IZ2S Lua lifecycle (`start/status/step/stop`) | **Verified on physical Switch 2:** start → status → step 5 → status → stop; 57/57 tests passing |
+| Balatro Lua app controls in the IZ2S web panel | Implemented, awaiting UI verification in browser |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -34,7 +35,7 @@ node --test test/balatro-*.test.cjs
 node start.cjs --preview
 ```
 
-Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. On switching back to SmileBASIC or Civilization VII, the Balatro panel closes and is hidden by CSS even if previously expanded. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
+Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The new **IZ2S Lua application** panel exposes Start, Status, Step +5 and Stop controls, each forwarded through an authenticated, allowlisted local HTTP endpoint. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. On switching back to SmileBASIC or Civilization VII, the Balatro panel closes and is hidden by CSS even if previously expanded. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
 
 For a **single real application-level Lua execution test** inside Balatro (not the native IZ2S core), run:
 
