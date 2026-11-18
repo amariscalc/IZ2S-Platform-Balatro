@@ -17,6 +17,11 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  declarationPreflight:async(host,options)=>{
+   calls.push(['declaration-preflight',host,options]);
+   return {backend:'balatro',mode:'native-declaration-only',closureConstructed:true,
+    nativeFunctionCalled:false,ready:false};
+  },
   bridgePreflight:async(host,options)=>{
    calls.push(['bridge-preflight',host,options]);
    return {backend:'balatro',mode:'upstream-native-bridge-preflight',
@@ -63,6 +68,12 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(bridge.nativeCallAttempted,false);
  assert.equal(bridge.ready,false);
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile','ffi-names','bridge-preflight']);
+ const declared=await backend.inspectNativeDeclaration('192.168.1.232');
+ assert.equal(declared.closureConstructed,true);
+ assert.equal(declared.nativeFunctionCalled,false);
+ assert.equal(declared.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
