@@ -461,3 +461,16 @@ The data-only `ffi-contract.cjs` validator now translates internal descriptor la
 ```powershell
 node --test test/balatro-ffi-contract.test.cjs test/balatro-backend.test.cjs
 ```
+
+### Upstream native bridge byte verification (2026-11-18)
+
+The Balatro backend now exposes `inspectNativeBridge(host)` using `native-bridge-check.cjs`. It calls only the **upstream preflight** `love.ffi.native_ready()` and the pure `bl.ffi_call.compile({ret="double",args={"double","double"}})` signature planner. Upstream `native_ready` inspects the native bridge's known SDK instruction bytes before allowing a future native transfer. On an unknown binary image or missing compiler, it produces a blocked result. This differs materially from simply checking whether `declare` and `invoke` exist.
+
+```powershell
+node --test test/balatro-native-bridge-check.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-bridge-check.cjs 192.168.1.232
+```
+
+The response reports `state` (unavailable/error/blocked/verified), `abi` (unavailable/rejected/accepted), `bridgeCodeBytesVerified` and `signatureCompilerAccepted`. No SDK function is called; `nativeOperationExecuted=false`, `nativeCoreReady=false` and `ready=false` by design. A verified bridge is **not** evidence that privileged services, Horizon IPC, executable allocation or the IZ2S NRO loader are available. Never substitute this report for the startup acquisition and session checks.
+
+Upstream reference: https://github.com/Luminger/balatro-switch-rce/blob/main/src/bl/ffi_call.lua (the `preflight` function). Unknown images must remain blocked; the upstream project warns about fatal LuaJIT cdata-call defects.
