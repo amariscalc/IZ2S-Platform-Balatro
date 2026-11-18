@@ -16,6 +16,8 @@ const {inspect:inspectNativeMemcpy}=require('./native-memcpy-smoke.cjs');
 const {inspect:inspectOwnedLifecycle}=require('./owned-lifecycle.cjs');
 const {inspect:inspectOwnedHandles}=require('./owned-handles.cjs');
 const {verify:verifyMemorySuite}=require('./memory-suite.cjs');
+const {execute:executeOwnedRegistry}=require('./owned-registry.cjs');
+const {verify:verifyPersistentMemory}=require('./persistent-memory-suite.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -42,11 +44,14 @@ function createBalatroBackend({
   ownedLifecycleSmoke=inspectOwnedLifecycle,
   ownedHandlesSmoke=inspectOwnedHandles,
   memorySuite=verifyMemorySuite,
+  ownedRegistry=executeOwnedRegistry,
+  persistentMemorySuite=verifyPersistentMemory,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
     typeof menuObserve!=='function'||typeof ffiProfile!=='function'||typeof ffiNames!=='function'||
     typeof bridgePreflight!=='function'||typeof declarationPreflight!=='function'||typeof nativeCallSmoke!=='function'||typeof ownedBufferSmoke!=='function'||typeof nativeMemcpySmoke!=='function'||typeof ownedLifecycleSmoke!=='function'||typeof ownedHandlesSmoke!=='function'||
-    typeof memorySuite!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof memorySuite!=='function'||typeof ownedRegistry!=='function'||
+    typeof persistentMemorySuite!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -95,6 +100,12 @@ function createBalatroBackend({
     },
     async verifyMemorySuite(host,options){
       return memorySuite(host,options);
+    },
+    async ownedRegistry(host,operation,args,options){
+      return ownedRegistry(host,operation,args,options);
+    },
+    async verifyPersistentMemory(host,options){
+      return persistentMemorySuite(host,options);
     },
     async planFfi(host,declaration,options){
       // Data-only assessment: this does not invoke FFI or expose a raw pointer.
