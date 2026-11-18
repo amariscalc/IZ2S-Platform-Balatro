@@ -497,3 +497,26 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-stage.cjs
 ```
 
 Expected `phase: "declared-only"` indicates the source-backed native bridge has passed the title's byte preflight and built a Lua closure. `phase: "blocked"` is an intentional refusal on unknown binary versions, unavailable ABI compiler or failed declaration. In either case, this **does not launch native IZ2S**; the service access, memory contract and privileged core-start prerequisites remain unverified. This stage never calls a native function or launches an NRO.
+
+### Real, limited Balatro SDK call + self-owned FFI buffer (2026-11-18)
+
+The backend now includes two real RPC experiments:
+
+- `native-call-smoke.cjs` checks the upstream byte preflight, declares the **fixed** SDK socket error getter (no parameters) using the title's own `info.off.sock_error`, and invokes it once. The upstream launcher already calls this getter in `src/bl/socket.lua`. No user-supplied function address, memory pointer, service handle or arbitrary signature is accepted. A failed/ambiguous response is never retried automatically.
+- `owned-memory-smoke.cjs` writes, checks and clears exactly 16 bytes of an FFI `uint8_t[16]` array owned by that Lua RPC chunk. It does not inspect other process mappings or provide arbitrary memory access.
+
+`native-validation.cjs` runs a guarded sequence: verified bridge + declaration, owned buffer, then the fixed SDK getter. On any rejection, it stops; the response names the blocker. These checks exercise title-local capabilities only, **not** privileged acquisition, Horizon IPC or `ldr:ro`.
+
+Run the relevant tests first:
+
+```powershell
+node --test test/balatro-native-bridge-check.test.cjs test/balatro-native-declare-check.test.cjs test/balatro-native-stage.test.cjs test/balatro-owned-memory-smoke.test.cjs test/balatro-native-call-smoke.test.cjs test/balatro-native-validation.test.cjs test/balatro-backend.test.cjs
+```
+
+With Balatro RPC already active on the known working image, execute the single guarded live validation:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-validation.cjs 192.168.1.232
+```
+
+`phase: limited-userland-verified` means the fixed getter and local buffer succeeded. Even then `ready:false`, `ipcVerified:false`, `nroLoaderVerified:false` and `nativeCoreReady:false` remain. If timeout, unexpected restart or hang occurs, do not blindly rerun the native call; inspect title health first.
