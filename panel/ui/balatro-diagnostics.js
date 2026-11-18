@@ -110,6 +110,9 @@
     void restoreStatus();
   }
   function leaveBalatro() {
+    // The details element stays open in the DOM after switching games unless
+    // explicitly closed. The external CSS also hides it outside Balatro mode.
+    details.open = false;
     setup.classList.remove('balatro-experimental');
     balatro.setAttribute('aria-pressed', 'false');
   }

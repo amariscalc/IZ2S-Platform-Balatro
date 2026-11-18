@@ -69,3 +69,11 @@ test('clearing Balatro session uses authenticated no-payload API', () => {
  assert.match(server, /\/api\/balatro\/disconnect/);
  assert.match(source, /disconnectButton\.addEventListener\('click'/);
 });
+
+test('Balatro diagnostics are not visible when SmileBASIC or Civ VII is selected', () => {
+  const css=fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.css'),'utf8');
+  assert.match(css, /#setup:not\(\.balatro-experimental\) > #balatro-diagnostic-panel\s*\{[^}]*display:\s*none\s*!important/s);
+  assert.match(source, /function leaveBalatro\(\)\s*\{[\s\S]*?details\.open\s*=\s*false/);
+  assert.match(source, /smilebasic\.addEventListener\('click', leaveBalatro/);
+  assert.match(source, /civilization\.addEventListener\('click', leaveBalatro/);
+});

@@ -15,6 +15,7 @@
 | Local authenticated GET status snapshot | Implemented; read-only |
 | Clear local Balatro diagnostic session | Implemented; does not close the game or change console state |
 | Exclusive Balatro highlight in panel | Updated to override the original SmileBASIC selection while in Balatro view; awaiting browser verification |
+| Hide Balatro dashboard when selecting SmileBASIC or Civilization VII | Fixed via explicit close and same-origin CSS guard; awaiting browser verification |
 | Native memory read/write, Horizon IPC, privileged access | **Not implemented or verified** |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
@@ -27,7 +28,7 @@ node --test test/balatro-*.test.cjs
 node start.cjs --preview
 ```
 
-Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
+Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. On switching back to SmileBASIC or Civilization VII, the Balatro panel closes and is hidden by CSS even if previously expanded. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
 
 A CLI alternative, with the RPC listener already active:
 

@@ -45,3 +45,7 @@ Develop and verify a genuinely compatible, unprivileged session protocol for Bal
 ## UI selection and session cleanup
 
 The original IZ2S panel continues to mark SmileBASIC selected internally. Balatro's diagnostic view overrides the SmileBASIC styling while Balatro is selected, without changing the original launcher. This release also adds an explicit local diagnostic reset. A reset during an outstanding request prevents a stale successful reply from changing the session phase.
+
+## Game switching (regression fix)
+
+The Balatro panel is visible **only** while the Balatro experimental view is active. Clicking SmileBASIC or Civilization VII explicitly closes the diagnostics details element and removes the experimental mode. A stylesheet guard hides diagnostics in all non-Balatro views, even if the details element was previously expanded. The selection is visual only; native launcher settings remain owned by the original IZ2S application.
