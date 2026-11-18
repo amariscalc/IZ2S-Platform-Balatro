@@ -19,9 +19,11 @@ function parse(reply,operation){
 }
 async function run(host, options={}, send=request){
   const results=[];
+  let beginSent=false;
   // Do not retry automatically: an ambiguous response may mean execution happened.
   try{
     for(const op of ['begin','read']){
+      if(op==='begin')beginSent=true;
       const reply=await send({host,port:9026,timeoutMs:5000,lua:LUA[op],...options});
       results.push(parse(reply,op));
     }
@@ -30,7 +32,7 @@ async function run(host, options={}, send=request){
       nativeCompatible:false,ready:false};
   }finally{
     // Best-effort cleanup only after begin may have been sent; never mask the first error.
-    if(results.length){
+    if(beginSent){
       try{parse(await send({host,port:9026,timeoutMs:5000,lua:LUA.clear,...options}),'clear');}
       catch(e){if(results.length===2)throw Error('Round trip succeeded but cleanup failed: '+e.message);}
     }
