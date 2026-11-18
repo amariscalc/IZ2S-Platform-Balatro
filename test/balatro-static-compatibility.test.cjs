@@ -23,3 +23,13 @@ test('source audit only refers to explicitly defined local files',()=>{
     assert.ok(check.markers.length>=2);
   }
 });
+
+test('relative source paths resolve from engine root, not switch2',()=>{
+  const path=require('node:path');
+  const fs=require('node:fs');
+  const engineRoot=path.resolve(__dirname,'../engines/iz2s-core/runtime/installer/engine');
+  for(const file of Object.values(FILES)){
+    assert.equal(fs.existsSync(path.join(engineRoot,file)),true,'Cannot find '+file);
+  }
+  assert.doesNotThrow(()=>analyze());
+});
