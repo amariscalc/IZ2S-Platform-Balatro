@@ -1,7 +1,8 @@
 'use strict';
 const {validateTarget}=require('./balatro-diagnostics.cjs');
-const {execute}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs');
-function create({run=execute}={}){
+const {createBalatroBackend}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/backend.cjs');
+const backend=createBalatroBackend();
+function create({run=(...args)=>backend.menu(...args)}={}){
   let busy=false;
   async function action({host,operation,value}){
     validateTarget(host);
