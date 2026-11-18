@@ -30,6 +30,13 @@ async function verify(host,options={},call=execute){
    const value=await expect('read',[b,i]);
    if(value!==(i*11+5)%256)throw Error('Persistent byte mismatch at '+i);
   }
+  // Exercise both size and live-handle quotas on real RPC calls.
+  await expect('alloc',[129],'blocked','quota');
+  const extra1=await expect('alloc',[8]);
+  const extra2=await expect('alloc',[8]);
+  await expect('alloc',[8],'blocked','quota');
+  await expect('release',[extra1]);
+  await expect('release',[extra2]);
   await expect('read',[a,16],'blocked','bounds');
   await expect('write',[a,16,3],'blocked','bounds');
   await expect('copy',[b,12,a,8],'blocked','bounds');
@@ -47,7 +54,8 @@ async function verify(host,options={},call=execute){
   initialized=false;
   await expect('status',[],'blocked','not_initialized');
   return {backend:'balatro',mode:'persistent-owned-handles',phase:'verified',
-   checks:steps.length,handleCount:3,bytesCopied:8,
+   checks:steps.length,handleCount:5,bytesCopied:8,
+   allocationQuotasVerified:true,
    persistentAcrossRpcConnections:true,boundsVerified:true,
    staleHandlesRejected:true,handleReuseRejected:true,
    zeroOnRelease:true,registryCleared:true,
