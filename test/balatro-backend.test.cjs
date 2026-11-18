@@ -17,6 +17,14 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  launcherExecute:async(host,op,options)=>{
+   calls.push(['launcher',host,op,options]);
+   return {backend:'balatro',phase:'running',menu:1,page:'home',nativeCoreReady:false,ready:false};
+  },
+  launcherIntegration:async(host,options)=>{
+   calls.push(['launcher-integration',host,options]);
+   return {backend:'balatro',phase:'verified',nativeCoreLaunched:false,ready:false};
+  },
   ownedRegistry:async(host,operation,args,options)=>{
    calls.push(['registry',host,operation,args,options]);
    return {op:operation,state:'ok',value:1,ready:false};
@@ -139,6 +147,16 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(gap.stages.length,7);
  assert.equal(gap.nativeCoreReady,false);
  assert.equal(gap.ready,false);
+ const launcher=await backend.launcher('192.168.1.232','start');
+ assert.equal(launcher.nativeCoreReady,false);
+ const verified=await backend.verifyLauncher('192.168.1.232');
+ assert.equal(verified.phase,'verified');
+ assert.equal(verified.nativeCoreLaunched,false);
+ assert.equal(verified.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
+  'owned-lifecycle','owned-handles','memory-suite','registry','persistent-suite',
+  'launcher','launcher-integration']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
