@@ -584,3 +584,17 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/persistent-memor
 ```
 
 Expected successful phase: `"verified"` with `persistentAcrossRpcConnections:true`, `boundsVerified:true`, `registryCleared:true`. This confirms **title-local allocated data persistence** only: no native transport support is unlocked by these tests. `nativeTransportReady:false`, `ipcVerified:false`, `nativeCoreReady:false` remain. Existing IZ2S `read/write/query/store64` and loader methods remain blocked with `BALATRO_NATIVE_UNAVAILABLE`. This is not a native NRO launcher.
+
+### Fix: persistent registry quota error on live Balatro (2026-11-18)
+
+A real Switch 2 test reported `Registry expectation failed: alloc expected blocked/quota` even though the offline suite passed. Root cause: the registry attempted to use `(quota|stale_handle|...)` as a **Lua pattern**, but Lua patterns do not have regex-style `|` alternatives. Thus a correct quota rejection was reported generically as `operation_failed` instead of `quota`.
+
+The Lua registry now recognizes a finite allowlist of error labels from the suffix of a Lua error message, accounting for an optional `chunk:line:` prefix. The PC suite also includes the **actual** reported response in assertion failures and tests that the Lua error classifier does not regress. No memory limits or native permissions were changed.
+
+```powershell
+git pull
+node --test test/balatro-owned-registry.test.cjs test/balatro-persistent-memory-suite.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/persistent-memory-suite.cjs 192.168.1.232
+```
+
+If `init` reports `already_initialized`, **do not clear the registry blindly**; determine ownership first. The integrated test clears only the registry after its own successful initialization. If an RPC hangs or the title restarts, investigate rather than retrying automatically. Until the live suite confirms, `persistentAcrossRpcConnections` must not be treated as verified on this console.
