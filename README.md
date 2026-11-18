@@ -773,3 +773,18 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-entry.
 ```
 
 This batch implements a shared startup **boundary**, not a working native Balatro loader. The real native launch will only be considered achieved when the original supervisor is executing and its native menu is visible on the console.
+
+### Live Balatro ↔ canonical IZ2S bootstrap comparison (2026-11-19)
+
+**No substitute UI is created or launched.** The original `core/console/sd-launcher/bootstrap.cjs` is still the target. The new `switch2/balatro/canonical-preflight.cjs` performs exactly one **read-only** RPC to inspect the actual Balatro title interfaces: presence of the `love.ffi` bridge and function entry points, SDK metadata, input handler and LOVE graphics. It invokes no FFI function, arbitrary pointer, native service or loader operation.
+
+The new `canonical-live-comparison.cjs` combines that *live title observation* with the offline, SHA-checked authentic launcher artifact and compares them with the **seven native ownership requirements** of `bootstrap.cjs` and `runtime.cjs`. It distinguishes title-local graphics/input from the **original native Vulkan renderer**; seeing a LOVE graphics interface is not evidence of native display ownership. It likewise distinguishes a Lua SDK getter from arbitrary addressable native RPC. No privilege or readiness flag can be promoted based solely on a title-local interface.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-canonical-live-comparison.test.cjs test/balatro-canonical-entry.test.cjs test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-live-comparison.cjs 192.168.1.232
+```
+
+Run with the **existing Balatro RPC server** active on TCP 9026. This does not start/stop an overlay or change its state. A current expected outcome is `phase:"entry-observed-native-blocked"`, `firstBlockingStage:"native-rpc"`, seven `missingNativePrerequisites` and `canonicalMenuReady:false`. The original launcher binary itself is not executed by this diagnostic. A successful bootstrap requires concrete resource-ownership verification from the canonical path, not simply changing the reported flags.
