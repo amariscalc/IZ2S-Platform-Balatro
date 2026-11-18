@@ -756,3 +756,20 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-launch-ga
 ```
 
 This remains an **offline artifact gate**. Even if all tests pass, `canonicalMenuReady:false` is correct until the native IZ2S launcher itself runs from the Balatro entry environment.
+
+### Shared original-launcher entry contract (2026-11-19)
+
+**Target:** exactly the same original `core/console/sd-launcher/native/build/launcher.bin` and `core/console/sd-launcher/bootstrap.cjs` from SmileBASIC, Balatro and Civilization. The existing Balatro graphical overlay remains a diagnostic, not the IZ2S console menu.
+
+`core/console/sd-launcher/entry-contract.cjs` now defines the seven ownership prerequisites needed by the original native launcher: native address-aware RPC, validated mapped session, retained filesystem, original Vulkan renderer, verified SDK/HID/Vulkan functions, authorized RO code mapping, and a managed native thread lifecycle. The first implementation is an **evidence-only guard**; it does not and cannot certify a live launch merely because a caller reports `true`. The concrete resource ownership checks must be performed by the canonical bootstrap.
+
+`switch2/balatro/canonical-entry.cjs` points to that shared contract. Its `inspect` command reports the same native artifact and known Balatro Lua capabilities without ever conflating them with native readiness. Its `launch` command deliberately returns `IZ2S_NATIVE_ENTRY_NOT_READY` **before any native operation** while the prerequisite evidence remains absent. Do not substitute a Lua-generated menu or skip the guard.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-canonical-entry.test.cjs test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-entry.cjs inspect
+```
+
+This batch implements a shared startup **boundary**, not a working native Balatro loader. The real native launch will only be considered achieved when the original supervisor is executing and its native menu is visible on the console.
