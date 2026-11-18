@@ -6,6 +6,7 @@ const {audit}=require('./diagnose.cjs');
 const {execute}=require('./app-session.cjs');
 const {observe}=require('./controller-observe.cjs');
 const {profile}=require('./ffi-profile.cjs');
+const {inspect:inspectFfiNames}=require('./ffi-names.cjs');
 const {assessProfile}=require('./ffi-contract.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
@@ -24,9 +25,10 @@ function createBalatroBackend({
   menuExecute=execute,
   menuObserve=observe,
   ffiProfile=profile,
+  ffiNames=inspectFfiNames,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
-    typeof menuObserve!=='function'||typeof ffiProfile!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof menuObserve!=='function'||typeof ffiProfile!=='function'||typeof ffiNames!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -48,6 +50,9 @@ function createBalatroBackend({
     },
     async inspectFfi(host,options){
       return ffiProfile(host,options);
+    },
+    async inspectFfiNames(host,options){
+      return ffiNames(host,options);
     },
     async planFfi(host,declaration,options){
       // Data-only assessment: this does not invoke FFI or expose a raw pointer.
