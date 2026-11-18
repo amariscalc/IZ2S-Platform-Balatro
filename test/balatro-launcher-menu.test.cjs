@@ -50,3 +50,20 @@ test('single launcher RPC is fixed and properly bounded',async()=>{
  assert.equal(requested.lua,script('start'));
  assert.equal(result.nativeCoreLaunched,false);
 });
+
+test('legacy menu conflict refuses launcher startup without installing hooks',()=>{
+ const blocked=parse(reply('blocked',0,'legacy',false,false),'start');
+ assert.equal(blocked.phase,'blocked');
+ assert.equal(blocked.nativeCoreLaunched,false);
+ assert.equal(blocked.ready,false);
+ assert.match(TEMPLATE,/rawget\(_G,"__IZ2S_BALATRO_APP_V1"\)/);
+ assert.match(TEMPLATE,/phase=blocked;menu=0;page=legacy/);
+ assert.throws(()=>parse(reply('blocked',0,'legacy',false,false),'status'));
+});
+test('dynamic dashboard reads owned buffers and FFI presence without claiming IPC',()=>{
+ assert.match(TEMPLATE,/OWNED REGISTRY:/);
+ assert.match(TEMPLATE,/REGISTRY DATA:/);
+ assert.match(TEMPLATE,/type\(love\.ffi\)/);
+ assert.match(TEMPLATE,/PROCESS IPC \/ NRO: NOT VERIFIED/);
+ assert.doesNotMatch(TEMPLATE,/ffi\.cast\(|ffi\.new\(|love\.ffi\.declare/);
+});
