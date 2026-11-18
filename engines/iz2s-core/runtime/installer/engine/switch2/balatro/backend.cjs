@@ -21,6 +21,7 @@ const {verify:verifyPersistentMemory}=require('./persistent-memory-suite.cjs');
 const {assess:assessReadinessGap}=require('./readiness-gap.cjs');
 const {execute:executeLauncher}=require('./launcher-menu.cjs');
 const {run:verifyLauncher}=require('./launcher-integration.cjs');
+const {inspect:inspectLauncherTelemetry}=require('./launcher-telemetry.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -51,13 +52,15 @@ function createBalatroBackend({
   persistentMemorySuite=verifyPersistentMemory,
   launcherExecute=executeLauncher,
   launcherIntegration=verifyLauncher,
+  launcherTelemetry=inspectLauncherTelemetry,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
     typeof menuObserve!=='function'||typeof ffiProfile!=='function'||typeof ffiNames!=='function'||
     typeof bridgePreflight!=='function'||typeof declarationPreflight!=='function'||typeof nativeCallSmoke!=='function'||typeof ownedBufferSmoke!=='function'||typeof nativeMemcpySmoke!=='function'||typeof ownedLifecycleSmoke!=='function'||typeof ownedHandlesSmoke!=='function'||
     typeof memorySuite!=='function'||typeof ownedRegistry!=='function'||
     typeof persistentMemorySuite!=='function'||
-    typeof launcherExecute!=='function'||typeof launcherIntegration!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof launcherExecute!=='function'||typeof launcherIntegration!=='function'||
+    typeof launcherTelemetry!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -118,6 +121,9 @@ function createBalatroBackend({
     },
     async verifyLauncher(host,options){
       return launcherIntegration(host,options);
+    },
+    async inspectLauncherTelemetry(host,options){
+      return launcherTelemetry(host,options);
     },
     assessNativeReadiness(){
       return assessReadinessGap();
