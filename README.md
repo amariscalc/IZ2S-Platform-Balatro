@@ -685,3 +685,24 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-telemet
 ```
 
 Use D-pad, A, B; the current title-local values should change if its registry is in use. Stop with `launcher-menu.cjs ... stop` once finished. Do not start both UI frontends simultaneously; the new one refuses a legacy session rather than stealing its hooks. No `read/write/query/ipc/loadNro/startCore` transport is implemented by this batch.
+
+### Physical UI confirmation and live event counters (2026-11-18)
+
+The owner confirmed that the Balatro IZ2S frontend **is visible on the Switch 2 display and responds to the physical controller**. This external observation establishes functional visual/gamepad use, beyond the previous synthetic RPC menu navigation. Do not confuse that user-observed fact with `launcher-suite.cjs`'s `visualRenderingObserved:false` / `controllerEventsObserved:false`: those fields only describe what that **automated suite** independently measured.
+
+The launcher now tracks `drawFrames` (successfully rendered overlay callbacks), `drawErrors` (failed guarded drawing), `gamepadEvents` (recognized actual LOVE gamepad inputs) and `keyboardEvents` in its title-local state. The new fixed **read-only** `launcher-activity.cjs` reports these counters without synthesizing an input, changing the selection or claiming native readiness. The backend also exposes `inspectLauncherActivity(host)`. Counts reset when a new launcher session is started and are available only while the frontend is running. This does not diagnose native NRO boot.
+
+One batch to test and observe physical events:
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-launcher-*.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-activity.cjs 192.168.1.232
+# Press D-pad, A and B on the console, then read counters:
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-activity.cjs 192.168.1.232
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cjs 192.168.1.232 stop
+```
+
+A running frontend with increasing `renderedFrames`, increasing `physicalGamepadEvents` and zero `drawErrors` gives independent in-title evidence. If counters remain zero despite working visuals, inspect the actual draw/gamepad dispatch route rather than asserting success. Never run the auto-cleanup integration suite while the manually started menu is active. For all tests, `nativeCoreReady:false` remains unchanged.
