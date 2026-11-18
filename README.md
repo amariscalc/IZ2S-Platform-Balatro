@@ -401,3 +401,16 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-session.cjs 
 ```
 
 The observer only reads the Lua menu's state and whether its wrapper functions remain installed in `love.handlers` and `bl.console.draw`. `overlay: true` indicates the draw wrapper is attached, **not** that a frame is visibly rendered. `gamepad: true` indicates the handler wrapper is installed, **not** that physical button events reached it. `drawFault: false` means no drawing exception was recorded by the wrapper; it is not visual proof. An actual on-screen observation and button-driven state transition are still necessary. This experiment makes no native or FFI calls.
+
+### Balatro backend provider integration (2026-11-18)
+
+The Balatro input route now has a dedicated provider at `switch2/balatro/backend.cjs` rather than just ad-hoc Lua test clients. The panel application controller delegates its existing allowlisted menu actions to this provider. It keeps the other input backends unchanged.
+
+The provider supports the verified Lua capability audit, menu RPC and input/overlay observation. Native-call, memory, service IPC, NRO and core-startup methods are represented as explicit **unsupported** operations with error code `BALATRO_NATIVE_UNAVAILABLE`; they do not silently fall back to another backend or claim native readiness.
+
+```powershell
+node --test test/balatro-backend.test.cjs test/balatro-backend-panel.test.cjs
+node --test test/balatro-*.test.cjs
+```
+
+This change integrates the application-level Balatro backend into the Platform's panel route. Native IZ2S startup from Balatro is **not** functional yet: the required native transport and acquisition/service prerequisites still have no verified implementation. Do not run native startup scripts against the Lua-only RPC endpoint.
