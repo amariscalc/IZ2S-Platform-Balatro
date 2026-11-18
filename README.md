@@ -845,3 +845,22 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.
 ```
 
 After checking the physical Switch screen and pressing left/right/A/B, read `status` again. **Interpretation:** `drawHookInstalled:true` with `drawCallbacks:0` means no observed invocation of either monitored draw callback; `drawCallbacks>0` with `drawErrors>0` indicates a drawing exception; `renderedFrames>0` establishes the Lua draw routine completed but still requires visual confirmation. Clean up using `canonical-focus.cjs <ip> stop`. If neither callback executes, we must inspect Balatro's render dispatch rather than declare success or repeatedly attempt native operations.
+
+### Console UTF-8 fault: actual source of invisible Lua ORBIT FOCUS (2026-11-19)
+
+Hardware showed `renderedFrames:141` but **nothing visible**, alongside `console draw: bl/console.lua:101: UTF-8 decoding error: Not enough space`. Examination of upstream `Luminger/balatro-switch-rce/src/bl/hooks.lua` shows it invokes `console.draw` **after** the standard `love.draw` callback. Consequently the previous `love.draw` fallback could render successfully yet get covered by the console framebuffer. The prior `bl.console.draw` wrapper called its original function unprotected; when that threw due to a text decode error, the wrapper never reached the port's draw routine.
+
+The canonical Lua focus hook now **protects the original console draw with `pcall` and draws the port afterward**, even if the console draw reports a UTF-8 failure. It removes the misleading `love.draw` fallback and exposes `consoleDrawCalls` and `consoleDrawFailures` independently from `drawCallbacks`, `renderedFrames` and `drawErrors`. No attempt is made to patch Balatro's bundled console code or mask the fault in telemetry. Composed Lua source still fits in the 8192-byte RPC limit.
+
+With Balatro's Lua RPC listener running, restart the old focus view to replace the existing closures:
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-canonical-focus.test.cjs test/balatro-canonical-live-comparison.test.cjs test/balatro-canonical-entry.test.cjs test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
+```
+
+If `consoleDrawCalls>0` while the port remains invisible, identify display ownership and inspect which component presents the final framebuffer. If `consoleDrawFailures>0`, the pre-existing Balatro console text decoder also needs separate attention. The native launcher remains offline, and no console or SD operations are attempted here.
