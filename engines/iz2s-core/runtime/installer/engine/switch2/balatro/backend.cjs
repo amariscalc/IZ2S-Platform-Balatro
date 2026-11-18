@@ -18,6 +18,7 @@ const {inspect:inspectOwnedHandles}=require('./owned-handles.cjs');
 const {verify:verifyMemorySuite}=require('./memory-suite.cjs');
 const {execute:executeOwnedRegistry}=require('./owned-registry.cjs');
 const {verify:verifyPersistentMemory}=require('./persistent-memory-suite.cjs');
+const {assess:assessReadinessGap}=require('./readiness-gap.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -106,6 +107,9 @@ function createBalatroBackend({
     },
     async verifyPersistentMemory(host,options){
       return persistentMemorySuite(host,options);
+    },
+    assessNativeReadiness(){
+      return assessReadinessGap();
     },
     async planFfi(host,declaration,options){
       // Data-only assessment: this does not invoke FFI or expose a raw pointer.
