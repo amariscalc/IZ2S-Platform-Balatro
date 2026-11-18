@@ -535,3 +535,20 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-memcpy-sm
 ```
 
 The expected live response is `state: "verified"`, `copyVerified: true`, `clearVerified: true`, and `ready: false`. This is a native function call on the console, unlike offline contract tests. If the title hangs or the RPC times out, stop and inspect its health instead of repeating the call automatically. The existing `native-validation.cjs` still tests the original getter and local buffer independently.
+
+### Scoped LuaJIT-owned buffer lifecycle (2026-11-18)
+
+`switch2/balatro/owned-lifecycle.cjs` probes a bounded **64-byte** memory lifecycle within one Balatro RPC chunk: allocate two `ffi.new("uint8_t[64]")` arrays, fill with known bytes, copy with `ffi.copy`, verify both arrays, zero both with `ffi.fill`, and let the local references leave scope. It does **not** request native SDK heap allocation, `free`, arbitrary address reads/writes, service IPC or executable memory. Releasing local references is not proof that a native heap allocation has been freed, and the report explicitly sets `nativeHeapFreeVerified:false`.
+
+The `createBalatroBackend()` instance now exposes `inspectOwnedLifecycle(host)`, alongside the previously verified bounded `inspectNativeMemcpy(host)`. The existing `read/write/query/store64/batch` methods continue to reject with `BALATRO_NATIVE_UNAVAILABLE`.
+
+Run from the Windows checkout while Balatro's RPC is available:
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-owned-lifecycle.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-lifecycle.cjs 192.168.1.232
+```
+
+Expected `state:"verified"` means this Lua-owned buffer lifecycle succeeded; `ready:false` and `nativeTransportReady:false` remain. The next genuine IZ2S transport gap is not ordinary Lua arrays, but the original session's controlled resource ownership plus mapping verification and IPC/loader prerequisites. Never treat this test as native NRO readiness.
