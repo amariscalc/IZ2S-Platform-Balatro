@@ -49,3 +49,9 @@ The original IZ2S panel continues to mark SmileBASIC selected internally. Balatr
 ## Game switching (regression fix)
 
 The Balatro panel is visible **only** while the Balatro experimental view is active. Clicking SmileBASIC or Civilization VII explicitly closes the diagnostics details element and removes the experimental mode. A stylesheet guard hides diagnostics in all non-Balatro views, even if the details element was previously expanded. The selection is visual only; native launcher settings remain owned by the original IZ2S application.
+
+## Fixed Lua execution smoke test
+
+`app-smoke.cjs` executes a bounded Lua application inside the already-running Balatro title via port 9026. The reply is parsed strictly; the result never claims native IZ2S launch or privilege access. Run `node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-smoke.cjs <console-ip>`.
+
+The SmileBASIC selector explicitly restores `izlauncher` when switching from Civilization VII, rather than inheriting a stale variant.

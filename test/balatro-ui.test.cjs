@@ -77,3 +77,8 @@ test('Balatro diagnostics are not visible when SmileBASIC or Civ VII is selected
   assert.match(source, /smilebasic\.addEventListener\('click', leaveBalatro/);
   assert.match(source, /civilization\.addEventListener\('click', leaveBalatro/);
 });
+
+test('SmileBASIC handler explicitly restores izlauncher after Civ VII',()=>{
+ const app=fs.readFileSync(path.join(__dirname,'../panel/ui/app.js'),'utf8');
+ assert.match(app, /\$\('game-sm4'\)\.onclick=\(\)=>act\('\/api\/launch-settings',\{loaderId:'iz2s-core',variant:'izlauncher'\}\)/);
+});

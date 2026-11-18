@@ -16,7 +16,9 @@
 | Clear local Balatro diagnostic session | Implemented; does not close the game or change console state |
 | Exclusive Balatro highlight in panel | Updated to override the original SmileBASIC selection while in Balatro view; awaiting browser verification |
 | Hide Balatro dashboard when selecting SmileBASIC or Civilization VII | Fixed via explicit close and same-origin CSS guard; awaiting browser verification |
+| SmileBASIC selection after Civilization VII | Handler now explicitly requests `izlauncher`; browser verification pending |
 | Native memory read/write, Horizon IPC, privileged access | **Not implemented or verified** |
+| Fixed unprivileged Lua code execution in Balatro | Smoke-test implementation added; hardware check pending |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
 ### Test the fork from source
@@ -29,6 +31,14 @@ node start.cjs --preview
 ```
 
 Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. On switching back to SmileBASIC or Civilization VII, the Balatro panel closes and is hidden by CSS even if previously expanded. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
+
+For a **single real application-level Lua execution test** inside Balatro (not the native IZ2S core), run:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/app-smoke.cjs 192.168.1.232
+```
+
+The output confirms whether the fixed Lua application completed in the title. This test does not invoke FFI, use memory primitives or access privileged IPC.
 
 A CLI alternative, with the RPC listener already active:
 

@@ -4023,7 +4023,7 @@ document
 $('game-civ7').onclick=()=>act('/api/launch-settings',{loaderId:state?.platform?.civswitchLdnAvailable===true?'civswitch-ldn':'civswitch',variant:'original'});
 $('civ-mode-usb').onclick=()=>act('/api/launch-settings',{loaderId:'civswitch',variant:'original'});
 $('civ-mode-ldn').onclick=()=>act('/api/launch-settings',{loaderId:'civswitch-ldn',variant:'original'});
-$('game-sm4').onclick=()=>act('/api/launch-settings',{loaderId:'iz2s-core',variant:state?.platform?.variant==='original'?'izlauncher':state.platform.variant});
+$('game-sm4').onclick=()=>act('/api/launch-settings',{loaderId:'iz2s-core',variant:'izlauncher'});
 document
   .querySelectorAll('[data-variant]')
   .forEach(
