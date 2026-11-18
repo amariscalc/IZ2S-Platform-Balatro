@@ -17,6 +17,10 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  launcherActivity:async(host,options)=>{
+   calls.push(['launcher-activity',host,options]);
+   return {phase:'running',renderedFrames:42,physicalGamepadEvents:3,ready:false};
+  },
   launcherTelemetry:async(host,options)=>{
    calls.push(['launcher-telemetry',host,options]);
    return {backend:'balatro',mode:'read-only-launcher-telemetry',
@@ -169,6 +173,14 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
   'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
   'owned-lifecycle','owned-handles','memory-suite','registry','persistent-suite',
   'launcher','launcher-integration','launcher-telemetry']);
+ const activity=await backend.inspectLauncherActivity('192.168.1.232');
+ assert.equal(activity.renderedFrames,42);
+ assert.equal(activity.physicalGamepadEvents,3);
+ assert.equal(activity.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
+  'owned-lifecycle','owned-handles','memory-suite','registry','persistent-suite',
+  'launcher','launcher-integration','launcher-telemetry','launcher-activity']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
