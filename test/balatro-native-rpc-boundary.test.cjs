@@ -36,3 +36,9 @@ test('the boundary never invokes native functions or changes title state',()=>{
  assert.throws(()=>create({host:''}),/Invalid Balatro host/);
  assert.throws(()=>create({host:'192.168.1.232',port:0}),/Invalid Balatro RPC port/);
 });
+
+test('canonical entry live method is available without changing the native launch guard',()=>{
+ const entry=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-entry.cjs');
+ assert.equal(typeof entry.inspectLive,'function');
+ assert.throws(()=>entry.launchOriginal(),e=>e.code==='IZ2S_NATIVE_ENTRY_NOT_READY');
+});
