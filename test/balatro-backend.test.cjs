@@ -17,6 +17,9 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  ffiProfile:async(host,options)=>{
+   calls.push(['ffi-profile',host,options]);return {mode:'read-only-ffi-profile',ready:false};
+  },
  });
  return {backend,calls};
 }
@@ -30,7 +33,10 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(menu.phase,'running');
  const observed=await backend.observe('192.168.1.232');
  assert.equal(observed.gamepad,true);
- assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe']);
+ const ffi=await backend.inspectFfi('192.168.1.232');
+ assert.equal(ffi.mode,'read-only-ffi-profile');
+ assert.equal(ffi.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
