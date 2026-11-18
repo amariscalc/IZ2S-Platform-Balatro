@@ -637,3 +637,27 @@ node -e "const {createBalatroBackend}=require('./engines/iz2s-core/runtime/insta
 ```
 
 This matrix is the grouped **next-stage checkpoint**: it prevents repeating the already-proven owned-memory experiments and defines the actual gaps before any claim of original NRO boot readiness.
+
+### IZ2S launcher frontend within Balatro: grouped visual integration (2026-11-18)
+
+A new **independent** title-local frontend `switch2/balatro/launcher-menu.lua` now draws the **IZ2S Platform / Balatro** overlay using the existing `bl.console.draw` hook. It does not replace the earlier, independently testable `app-menu.lua`. The launcher uses the controller's D-pad/A/B (and keyboard up/down/Enter/Escape) for six entries: Dashboard, Balatro RPC, Memory Status, Native Status, About, and Exit. Five informational pages show verified title-local capabilities and label unsupported process memory, privileged IPC and core launch as unavailable. No NRO is executed; the interface never claims native-core readiness.
+
+`launcher-menu.cjs` offers the fixed `start|status|up|down|select|back|stop` RPC contract. `launcher-integration.cjs` is **one end-to-end test**: only if the frontend is initially idle, start it, verify overlay and input hooks, visit and return from each of the five information pages, verify both wrap-around directions, exit, and verify cleanup. If an unexpected response occurs, it attempts best-effort cleanup of the frontend it started; it refuses to take over an existing one. `createBalatroBackend()` exposes `launcher(host,op)` and `verifyLauncher(host)`. The original Balatro entry and native loader remain isolated.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-launcher-menu.test.cjs test/balatro-launcher-integration.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-integration.cjs 192.168.1.232
+```
+
+Expected: `phase:"verified"`, all five `pagesVerified`, `menuWrapVerified:true` and `cleanupVerified:true`, while `nativeCoreLaunched:false` and `ready:false`. To **leave the visual frontend visible** instead of running the auto-cleanup suite, use:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cjs 192.168.1.232 start
+# Navigate with D-pad, A, B on Switch 2.
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cjs 192.168.1.232 status
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/launcher-menu.cjs 192.168.1.232 stop
+```
+
+The integration test **stops** the frontend on successful completion, so a blank overlay afterwards is expected. Do not run the integration suite while a manually started frontend is active; it will refuse to take ownership. This is an IZ2S-compatible **frontend presentation** on the Balatro Lua side, not the actual original IZ2S native process or privileged launcher.
