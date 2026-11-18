@@ -340,3 +340,14 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/static-compatibi
 ```
 
 The static audit reads existing source files only. It inventories nine groups of textual requirements in the Balatro Lua transport, original native RPC, session verification, `ldr:ro` loader and privileged core startup. A present source marker demonstrates only that the referenced code path exists, **not** that Balatro can execute it. The report always sets `ready: false`, `contactedConsole: false`, and `executedNativeCalls: false`. The preflight's four positive FFI interface checks do not establish native memory transport, executable mapping permissions, IPC services or a privilege acquisition channel. No changes are made to the original backends.
+
+### Offline Balatro/native RPC contract diff (2026-11-18)
+
+This audit compares eight interface-contract categories, including request framing, return types, native-call dispatch, memory operations, SDK verification, resource ownership, `ldr:ro` IPC and privileged core prerequisites. It only reads local source files and never contacts the console or executes native operations.
+
+```powershell
+node --test test/balatro-contract-diff.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/contract-diff.cjs > balatro-contract-diff.json
+```
+
+A successful test means source-contract markers are consistent, **not** that the native loader is compatible. The report intentionally retains `nativeCompatibilityVerified: false` and `ready: false`. This is separate from the live FFI-presence preflight. Original native modules and the other input backends remain unchanged.
