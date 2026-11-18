@@ -803,3 +803,28 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-entry.
 ```
 
 The live command requires an active Balatro RPC connection on TCP 9026 and **does not** start the original IZ2S menu. Passing checks establish the behavior and limits of the real Balatro entry adapter; native launcher readiness remains blocked until an authorized native transport can satisfy the original bootstrap contract with verified ownership.
+
+### First faithful partial Lua/LÖVE port of the **real IZ2S menu geometry** (2026-11-19)
+
+The original IZ2S native launcher remains the single desired implementation. Because Balatro's entry has not demonstrated a native executable mapping/session, this branch now also includes an explicitly **partial source-derived Lua view port** of its real ORBIT FOCUS presentation rather than the previous invented six-option diagnostics menu.
+
+- `switch2/balatro/canonical-focus-model.lua`: ports the original `engines/CivSwitch/launcher/app/shaders/focus-layout.glsl` curved card rail and spacing, `launcher-layout.glsl` page size, and `iz-draw.glsl` colors; implements the add/browse home control, horizontal left/right movement and back/select states from `app.comp`.
+- `switch2/balatro/canonical-focus.lua`: draws the port with Balatro's existing LOVE rendering and gamepad handler hooks, using title-local state and reversible install/uninstall of hooks. It does **not** load original Vulkan shaders (those require their GPU ABI and atlas), and does not claim pixel-perfect or full behavioral equivalence.
+- `switch2/balatro/canonical-focus.cjs`: fixed, bounded RPC commands `start|status|left|right|select|back|stop`; source module is included in each Lua chunk, while the live view state persists between requests. The original `launcher.bin` is **not** launched.
+
+**Important limitation:** there is currently **no verified source for installed app names, packages, atlas artwork or SD filesystem** inside Balatro. The Lua view therefore starts with the authentic **empty-library + ADD/BROWSE** structure, *not* fabricated tiles or package installations. A/B and left/right input can be verified, but pressing A cannot install packages, start applications or invoke native capabilities. This is an early view port of original IZ2S source, not its native supervisor and not a replacement for native platform functionality.
+
+On a console already running Balatro's RPC listener, with no other experimental Balatro UI active:
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-canonical-focus.test.cjs test/balatro-canonical-live-comparison.test.cjs test/balatro-canonical-entry.test.cjs test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
+# Use left/right/A/B on the Switch; inspect the screen and query status again.
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
+```
+
+Do not start the earlier Balatro diagnostic menus in parallel. If a prior UI remains active, the focus view refuses to take over hooks. On an ambiguous timeout, read `status` before attempting another `start`. This port is safe to leave idle; its only purpose is to test faithful presentation/navigation under the title's LOVE API. The canonical native menu remains `canonicalMenuReady:false`.
