@@ -438,3 +438,14 @@ node --test test/balatro-*.test.cjs
 ```
 
 The descriptor counts integer/pointer and float/double register classes separately (up to 8 each, 16 mixed total), matching the limits documented for the upstream Balatro RCE 1.1.0 ABI: https://github.com/Luminger/balatro-switch-rce/releases/tag/v1.1.0 . No function is invoked.\n\nThe allowed type labels are an **unverified candidate vocabulary** for adapting contracts in Node.js: they are not proof that Balatro accepts those exact spellings. A match between the observed Lua wrapper arity and the candidate signature does not verify the native ABI, actual SDK targets, memory operations, service IPC, permissions or startup. Keep `ready=false`.
+
+### Inspect actual Lua FFI wrapper parameter names (2026-11-18)
+
+A new read-only probe, `switch2/balatro/ffi-names.cjs`, retrieves parameter names using `debug.getlocal(function, index)` and counts lexical upvalues using `debug.getupvalue`, **without reading their values**. This is a diagnostic probe only; it does not call `love.ffi.declare` or `love.ffi.invoke`.
+
+```powershell
+node --test test/balatro-ffi-names.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/ffi-names.cjs 192.168.1.232
+```
+
+The Balatro backend also provides `inspectFfiNames(host)`. Depending on LuaJIT debug availability, the probe may return `unavailable` or unnamed arguments. Parameter names are informative, not a proof of their meaning, native ABI support, memory access, service permissions or native core startup. `ready` remains false.
