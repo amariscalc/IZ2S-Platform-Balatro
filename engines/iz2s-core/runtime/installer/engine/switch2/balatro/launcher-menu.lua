@@ -1,4 +1,4 @@
--- IZ2S Platform Balatro: title-local launcher frontend.
+-- Balatro diagnostic overlay, NOT the canonical IZ2S console launcher.
 -- Does not execute NROs or assert unavailable native services.
 local OP="status"
 local KEY="__IZ2S_BALATRO_LAUNCHER_V1"
@@ -30,9 +30,9 @@ local function draw()
   local x,y=math.floor(sw*0.045),math.floor(sh*0.18)
   g.setColor(0.07,0.10,0.14,0.97);g.rectangle("fill",x,y,w,h,8,8)
   g.setColor(0.45,0.86,0.96,1);g.rectangle("line",x,y,w,h,8,8)
-  g.print("IZ2S PLATFORM  |  BALATRO",x+20,y+16)
+  g.print("IZ2S / BALATRO DIAGNOSTICS",x+20,y+16)
   g.setColor(0.75,0.80,0.85,1)
-  g.print("TITLE-LOCAL FRONTEND  -  NATIVE CORE OFFLINE",x+20,y+45)
+  g.print("NOT THE SHARED IZ2S MENU  -  CORE OFFLINE",x+20,y+45)
   if app.page=="home" then
    for i,label in ipairs(labels) do
     if i==app.menu then g.setColor(0.47,0.92,1,1)
@@ -55,7 +55,7 @@ local function draw()
      "ARBITRARY MEMORY: NOT VERIFIED"},
     native={"FFI INTERFACE: "..(live.ffi and "PRESENT" or "UNAVAILABLE"),
      "PRIOR SDK CALLS: TESTED SEPARATELY","PROCESS IPC / NRO: NOT VERIFIED"},
-    about={"IZ2S PLATFORM BALATRO FRONTEND","READ-ONLY TITLE STATE DISPLAY",
+    about={"BALATRO DIAGNOSTIC OVERLAY","READ-ONLY TITLE STATE DISPLAY",
      "NO PRIVILEGED LAUNCH IS ATTEMPTED"},
    }
    for i,line in ipairs(messages[app.page] or {}) do
