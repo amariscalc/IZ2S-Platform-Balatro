@@ -372,3 +372,14 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/rpc-roundtrip.cj
 ```
 
 The response parser rejects unexpected framing or state and no command is automatically retried. A best-effort clear command is sent after any attempted begin, including when its response is ambiguous. Success proves only Lua state persistence across Balatro RPC connections. It does not prove native transport compatibility or IZ2S core readiness.
+
+### Live Balatro Lua menu navigation smoke test (2026-11-18)
+
+The isolated smoke test checks that the Lua menu starts, retains the selected item across TCP RPC connections, increments the title-local step counter through menu selection, opens the status page, returns home and cleans up. It does **not** execute the native IZ2S menu or any native/FFI operation. It refuses to modify an already-running Lua menu.
+
+```powershell
+node --test test/balatro-menu-navigation.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/menu-navigation.cjs 192.168.1.232
+```
+
+Run only with Balatro's RPC server active. The script starts a temporary Lua overlay and stops it in a finally block. On an ambiguous timeout or error, do not retry blindly; first inspect the current application state with `app-session.cjs <ip> status`. A passing test demonstrates title-local menu navigation and RPC persistence only; `nativeCoreLaunched` and `ready` stay false.
