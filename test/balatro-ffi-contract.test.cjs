@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {MAX_PARAMS,SIGNATURE,SUPPORTED_TYPES,validateDeclaration,assessProfile}
+const {MAX_PARAMS,MAX_INTEGER_ARGS,MAX_FLOAT_ARGS,SIGNATURE,SUPPORTED_TYPES,validateDeclaration,assessProfile}
  =require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/ffi-contract.cjs');
 const PROFILE={
  backend:'balatro',mode:'read-only-ffi-profile',
@@ -15,7 +15,10 @@ test('symbolic FFI declaration is copied and validated without invocation',()=>{
  assert.equal(Object.isFrozen(out.argumentTypes),true);
  assert.deepEqual(SIGNATURE.declare,['returnType','argumentTypes','address']);
  assert.ok(SUPPORTED_TYPES.includes('pointer'));
- assert.equal(MAX_PARAMS,8);
+ assert.equal(MAX_PARAMS,16);
+ assert.equal(MAX_INTEGER_ARGS,8);
+ assert.equal(MAX_FLOAT_ARGS,8);
+ assert.equal(validateDeclaration({...DECLARATION,argumentTypes:[...Array(8).fill('u64'),...Array(8).fill('f64')]}).argumentTypes.length,16);
 });
 test('invalid types, raw pointers and oversized argument lists are rejected',()=>{
  for(const input of [
@@ -25,6 +28,8 @@ test('invalid types, raw pointers and oversized argument lists are rejected',()=
   {...DECLARATION,returnType:'any'},
   {...DECLARATION,argumentTypes:['void']},
   {...DECLARATION,argumentTypes:Array(9).fill('i32')},
+  {...DECLARATION,argumentTypes:Array(9).fill('f64')},
+  {...DECLARATION,argumentTypes:Array(17).fill('i32')},
   {...DECLARATION,extra:true},
   null,
  ])assert.throws(()=>validateDeclaration(input));
