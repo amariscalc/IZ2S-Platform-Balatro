@@ -486,3 +486,14 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-declare-c
 ```
 
 If the bridge preflight is blocked or reports an error, **do not** run the declaration probe. An unknown binary or absent image offsets must fail closed. Successful closure construction does not imply the application possesses the privilege to open restricted services, allocate executable memory or start the original IZ2S NRO.
+
+### One-command guarded native bridge staging (2026-11-18)
+
+`native-stage.cjs` now orchestrates **two real Balatro RPC checks** in order: first the upstream code-byte verification and pure ABI compiler, then (only on success) construction and description of a Lua closure for a known SDK `socket(int,int,int)` symbol. **No declared function is called**.
+
+```powershell
+node --test test/balatro-native-bridge-check.test.cjs test/balatro-native-declare-check.test.cjs test/balatro-native-stage.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-stage.cjs 192.168.1.232
+```
+
+Expected `phase: "declared-only"` indicates the source-backed native bridge has passed the title's byte preflight and built a Lua closure. `phase: "blocked"` is an intentional refusal on unknown binary versions, unavailable ABI compiler or failed declaration. In either case, this **does not launch native IZ2S**; the service access, memory contract and privileged core-start prerequisites remain unverified. This stage never calls a native function or launches an NRO.
