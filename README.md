@@ -741,3 +741,18 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-launch-ga
 ```
 
 This check does **not** require an active Switch 2 RPC connection and intentionally does not start the Lua diagnostic menu. It reports `phase:"artifacts-verified"` only when the original native launcher binary and source manifest match, while keeping `canonicalMenuReady:false`. Report any hash or source integrity failure as a blocker; do not bypass mismatches. Do not claim the actual IZ2S menu is running until the canonical code (not the Balatro diagnostic overlay) renders on the console.
+
+### Canonical launcher fixture correction (2026-11-19)
+
+The console owner's grouped verification found 10/12 local tests passing, with the two failures both using the simulated canonical launcher. The **real** offline audit succeeded: `phase:"artifacts-verified"`, 44 checked files, 43 manifest sources, zero hash failures, and no missing startup markers. The native `launcher.bin` and its manifest are not the cause of those two test failures.
+
+The fixture previously hashed the placeholder string `source` for `native/launcher.c` and then **overwrote that same mocked path** with the expected source markers. The audit correctly rejected the resulting hash mismatch. The fixture now hashes the same marker source bytes it returns to the verifier and includes positive and negative integrity regressions. No native binary, service, memory or graphics path was changed.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-launch-gate.cjs
+```
+
+This remains an **offline artifact gate**. Even if all tests pass, `canonicalMenuReady:false` is correct until the native IZ2S launcher itself runs from the Balatro entry environment.
