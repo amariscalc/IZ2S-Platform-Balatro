@@ -318,3 +318,14 @@ The stop/start pair upgrades the previous graphical overlay to this menu; the RP
 ### 2026-11-18 syntax regression
 
 The first interactive-menu release contained a missing JavaScript comma immediately after `app.inputActive=attachInput()`. This caused `SyntaxError: Unexpected string` in `app-session.cjs` before any network operation. To prevent recurrence, the fixed Lua application has been moved to a separate `app-menu.lua` source file; `app-session.cjs` now substitutes only a validated operation from its eight-action allowlist and a bounded numeric step count. The CI workflow explicitly runs `node --check` before the Balatro suite. The new menu has not yet been tested on hardware; the previously confirmed graphical overlay is unaffected by this PC-side syntax regression.
+
+### Read-only Balatro native bridge preflight (2026-11-18)
+
+Run from the repository root with Balatro RPC already connected:
+
+```powershell
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-preflight.cjs 192.168.1.232
+node --test test/balatro-native-preflight.test.cjs
+```
+
+The preflight checks only the presence and types of `love.ffi.declare`, `love.ffi.invoke`, and the title-local `bl.app.info.sdk_base`. It performs **no** FFI calls, SDK instruction verification, IPC requests, memory changes, service acquisition, or NRO loads. All native-launch qualification flags remain false. A reported bridge and SDK base are insufficient evidence for `ldr:ro` compatibility or native IZ2S startup. The preflight needs a hardware RPC run before any result can be claimed for this Switch.
