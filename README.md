@@ -722,3 +722,22 @@ Canonical implementation identified in the existing repository:
 **Architecture requirement:** adapt Balatro's entry into the established native console-launcher lifecycle and its shared assets/state, rather than implementing a lookalike in LOVE Lua. Existing verified Balatro RPC, input and overlay capabilities only confirm that the entry can communicate and render a diagnostic UI. They do not provide the mapped native code, original render context, filesystem access or service/IPC ownership expected by the canonical launcher.
 
 Next engineering gate: inventory the canonical launcher startup prerequisites and test which interfaces Balatro can satisfy *without* relying on raw-pointer guesses or adopting a different UI. Keep the authentic-launcher milestone blocked until the canonical binary/renderer is the thing actually displayed. Do not interpret the diagnostic `launcher-integration.cjs` result as the canonical IZ2S menu having launched.
+
+### Authentic IZ2S native launcher audit — no Balatro lookalike (2026-11-19)
+
+This implementation now targets the **canonical** `core/console/sd-launcher/native/build/launcher.bin` shared by the established IZ2S console launcher. The prior `switch2/balatro/launcher-menu.lua` overlay remains strictly a **diagnostic**, never the intended end-user menu.
+
+The new `switch2/balatro/native-launch-gate.cjs` performs one **offline** source-backed audit: it checks the actual native image against `native/build/manifest.json` length and SHA-256; checks every hash recorded under `manifest.sources` against the repository's canonical native source files; and verifies the entry-related source files still contain the expected bootstrap/runtime/mixed-menu control points. This is not a loader, binary patcher, injection interface or GPU substitute. A passing artifact hash attests source/image consistency, **not** a live native supervisor or graphics session.
+
+The original launcher initialization relies on `core/console/sd-launcher/bootstrap.cjs` (retained FS endpoint, session, native code mapping, graphics preparation and supervisor threading) and `core/console/sd-launcher/runtime.cjs`; `native/launcher.c` is the original menu implementation. The current Balatro backend has demonstrated title-local Lua and FFI calls, owned-memory persistence and live controller/rendering for the diagnostic UI. It has **not** demonstrated the addressable memory, service IPC, mapped executable and filesystem/graphics owner contracts needed by the canonical launcher. `canonicalMenuReady`, `nativeTransportReady`, `filesystemSessionReady`, and `originalGraphicsReady` therefore remain `false`.
+
+One grouped offline command:
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-native-launch-gate.test.cjs test/balatro-readiness-gap.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-launch-gate.cjs
+```
+
+This check does **not** require an active Switch 2 RPC connection and intentionally does not start the Lua diagnostic menu. It reports `phase:"artifacts-verified"` only when the original native launcher binary and source manifest match, while keeping `canonicalMenuReady:false`. Report any hash or source integrity failure as a blocker; do not bypass mismatches. Do not claim the actual IZ2S menu is running until the canonical code (not the Balatro diagnostic overlay) renders on the console.
