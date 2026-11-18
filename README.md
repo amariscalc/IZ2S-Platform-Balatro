@@ -414,3 +414,14 @@ node --test test/balatro-*.test.cjs
 ```
 
 This change integrates the application-level Balatro backend into the Platform's panel route. Native IZ2S startup from Balatro is **not** functional yet: the required native transport and acquisition/service prerequisites still have no verified implementation. Do not run native startup scripts against the Lua-only RPC endpoint.
+
+### Balatro FFI signature discovery without native invocation (2026-11-18)
+
+The next compatibility prerequisite is understanding the **Lua wrapper interface** for `love.ffi.declare` and `love.ffi.invoke`. The backend now exposes `inspectFfi()` and a CLI to inspect function metadata through `debug.getinfo` inside Balatro. This does not call either FFI method or touch native memory.
+
+```powershell
+node --test test/balatro-ffi-profile.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/ffi-profile.cjs 192.168.1.232
+```
+
+`implementation` is `Lua`, `C`, `missing` or `unknown`. `parameters` and `varargs` come from the game's Lua debug metadata, when available; LuaJIT/5.1 C wrappers may report no reliable argument count. Profile success is **not** proof of a callable SDK ABI, code execution, memory access, IPC or loader privileges. `ready` remains false.
