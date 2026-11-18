@@ -13,6 +13,7 @@ const {inspect:inspectNativeDeclaration}=require('./native-declare-check.cjs');
 const {inspect:inspectNativeCall}=require('./native-call-smoke.cjs');
 const {inspect:inspectOwnedBuffer}=require('./owned-memory-smoke.cjs');
 const {inspect:inspectNativeMemcpy}=require('./native-memcpy-smoke.cjs');
+const {inspect:inspectOwnedLifecycle}=require('./owned-lifecycle.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -36,10 +37,11 @@ function createBalatroBackend({
   nativeCallSmoke=inspectNativeCall,
   ownedBufferSmoke=inspectOwnedBuffer,
   nativeMemcpySmoke=inspectNativeMemcpy,
+  ownedLifecycleSmoke=inspectOwnedLifecycle,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
     typeof menuObserve!=='function'||typeof ffiProfile!=='function'||typeof ffiNames!=='function'||
-    typeof bridgePreflight!=='function'||typeof declarationPreflight!=='function'||typeof nativeCallSmoke!=='function'||typeof ownedBufferSmoke!=='function'||typeof nativeMemcpySmoke!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof bridgePreflight!=='function'||typeof declarationPreflight!=='function'||typeof nativeCallSmoke!=='function'||typeof ownedBufferSmoke!=='function'||typeof nativeMemcpySmoke!=='function'||typeof ownedLifecycleSmoke!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -79,6 +81,9 @@ function createBalatroBackend({
     },
     async inspectNativeMemcpy(host,options){
       return nativeMemcpySmoke(host,options);
+    },
+    async inspectOwnedLifecycle(host,options){
+      return ownedLifecycleSmoke(host,options);
     },
     async planFfi(host,declaration,options){
       // Data-only assessment: this does not invoke FFI or expose a raw pointer.
