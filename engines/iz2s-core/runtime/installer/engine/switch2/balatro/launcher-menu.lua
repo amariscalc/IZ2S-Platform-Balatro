@@ -4,6 +4,20 @@ local OP="status"
 local KEY="__IZ2S_BALATRO_LAUNCHER_V1"
 local labels={"DASHBOARD","BALATRO RPC","MEMORY STATUS","NATIVE STATUS","ABOUT","EXIT"}
 local app=rawget(_G,KEY)
+local function state()
+ local legacy=rawget(_G,"__IZ2S_BALATRO_APP_V1")
+ local registry=rawget(_G,"__IZ2S_OWNED_REGISTRY_V1")
+ local count,used=0,0
+ if type(registry)=="table" and type(registry.buffers)=="table" then
+  for _,v in pairs(registry.buffers) do
+   count=count+1
+   if type(v)=="table" and type(v.size)=="number" then used=used+v.size end
+  end
+ end
+ local ffiPresent=type(love)=="table" and type(love.ffi)=="table"
+ return {legacy=type(legacy)=="table",registry=count,used=used,ffi=ffiPresent}
+end
+
 local function draw()
  if rawget(_G,KEY)~=app or app.drawFault then return end
  local g=love and love.graphics
@@ -28,12 +42,21 @@ local function draw()
   else
    g.setColor(1,1,1,1)
    g.print(app.page:upper(),x+20,y+102)
+   local live=state()
    local messages={
-    dashboard={"BALATRO USERLAND READY","MENU / CONTROLLER / LUA RPC"},
-    rpc={"TCP RPC :9026","LOCAL LUA COMMANDS VERIFIED"},
-    memory={"OWNED BUFFERS VERIFIED","PERSISTENT HANDLES VERIFIED","ARBITRARY MEMORY: UNAVAILABLE"},
-    native={"SDK GETTER + MEMCPY VERIFIED","PROCESS MEMORY / IPC: UNAVAILABLE","NRO / CORE: NOT READY"},
-    about={"IZ2S PLATFORM BALATRO FRONTEND","NO PRIVILEGED LAUNCH IS ATTEMPTED"},
+    dashboard={"RPC TITLE-LOCAL: ACTIVE",
+     "FFI INTERFACE: "..(live.ffi and "PRESENT" or "UNAVAILABLE"),
+     "OWNED REGISTRY: "..tostring(live.registry).." BUFFERS / "..tostring(live.used).." BYTES",
+     "LEGACY LUA MENU: "..(live.legacy and "ACTIVE" or "IDLE")},
+    rpc={"TCP RPC :9026","TITLE STATE: LIVE TELEMETRY",
+     "REGISTRY DATA: "..tostring(live.used).." / 512 BYTES"},
+    memory={"OWNED BUFFERS: "..tostring(live.registry),
+     "LIVE BYTES: "..tostring(live.used),
+     "ARBITRARY MEMORY: NOT VERIFIED"},
+    native={"FFI INTERFACE: "..(live.ffi and "PRESENT" or "UNAVAILABLE"),
+     "PRIOR SDK CALLS: TESTED SEPARATELY","PROCESS IPC / NRO: NOT VERIFIED"},
+    about={"IZ2S PLATFORM BALATRO FRONTEND","READ-ONLY TITLE STATE DISPLAY",
+     "NO PRIVILEGED LAUNCH IS ATTEMPTED"},
    }
    for i,line in ipairs(messages[app.page] or {}) do
     g.print(line,x+20,y+108+i*36)
@@ -111,6 +134,9 @@ local function hookInput()
  return active
 end
 if OP=="start" then
+ if not app and type(rawget(_G,"__IZ2S_BALATRO_APP_V1"))=="table" then
+  return "IZ2S_LAUNCHER_V1;phase=blocked;menu=0;page=legacy;overlay=false;controls=false"
+ end
  if not app then
   app={version=1,menu=1,page="home",drawFault=false}
   rawset(_G,KEY,app)
