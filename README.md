@@ -520,3 +520,18 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-validatio
 ```
 
 `phase: limited-userland-verified` means the fixed getter and local buffer succeeded. Even then `ready:false`, `ipcVerified:false`, `nroLoaderVerified:false` and `nativeCoreReady:false` remain. If timeout, unexpected restart or hang occurs, do not blindly rerun the native call; inspect title health first.
+
+### Native SDK memcpy on two self-owned FFI arrays (2026-11-18)
+
+The fixed `switch2/balatro/native-memcpy-smoke.cjs` experiment uses the upstream `love.ffi.native_ready()` exact-image byte check, then declares the SDK's known `memcpy` export from `bl.app.info.off.memcpy` with `void (void *, const void *, size_t)`. It copies exactly **16 bytes** between two `ffi.new("uint8_t[16]")` arrays owned by the current Lua RPC chunk, verifies their expected contents (checksum `2040`), and zeros both arrays. It accepts no user-supplied pointer, address, signature, service handle or buffer size. On unrecognized code bytes, missing SDK offsets or any mismatch it fails closed.
+
+The Balatro backend exposes this experiment through `inspectNativeMemcpy(host)`. Even success proves only a fixed SDK copy between two owned arrays: **not** arbitrary process memory access, executable mappings, Horizon IPC, `ldr:ro`, privileged acquisition, or an IZ2S NRO launch.
+
+```powershell
+cd C:\NintendoSwitch\balatro\IZ2S-Platform-Balatro
+git pull
+node --test test/balatro-native-memcpy-smoke.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-memcpy-smoke.cjs 192.168.1.232
+```
+
+The expected live response is `state: "verified"`, `copyVerified: true`, `clearVerified: true`, and `ready: false`. This is a native function call on the console, unlike offline contract tests. If the title hangs or the RPC times out, stop and inspect its health instead of repeating the call automatically. The existing `native-validation.cjs` still tests the original getter and local buffer independently.
