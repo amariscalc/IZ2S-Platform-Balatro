@@ -17,6 +17,14 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  ownedRegistry:async(host,operation,args,options)=>{
+   calls.push(['registry',host,operation,args,options]);
+   return {op:operation,state:'ok',value:1,ready:false};
+  },
+  persistentMemorySuite:async(host,options)=>{
+   calls.push(['persistent-suite',host,options]);
+   return {backend:'balatro',phase:'verified',nativeCoreReady:false,ready:false};
+  },
   ownedHandlesSmoke:async(host,options)=>{
    calls.push(['owned-handles',host,options]);
    return {backend:'balatro',mode:'scoped-owned-handles',boundsVerified:true,ready:false};
@@ -118,6 +126,15 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
   'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
   'owned-lifecycle','owned-handles','memory-suite']);
+ const registry=await backend.ownedRegistry('192.168.1.232','status',[]);
+ assert.equal(registry.ready,false);
+ const persistent=await backend.verifyPersistentMemory('192.168.1.232');
+ assert.equal(persistent.phase,'verified');
+ assert.equal(persistent.nativeCoreReady,false);
+ assert.equal(persistent.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
+  'owned-lifecycle','owned-handles','memory-suite','registry','persistent-suite']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
