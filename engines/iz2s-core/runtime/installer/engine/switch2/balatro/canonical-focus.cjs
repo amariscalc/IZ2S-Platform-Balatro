@@ -11,26 +11,32 @@ function script(op){
  const action='local OP="status"',model='-- __MODEL_SOURCE__';
  if(!TEMPLATE.includes(action)||!TEMPLATE.includes(model)||
    !MODEL.includes('return M'))throw Error('Invalid canonical focus source');
- const code=TEMPLATE.replace(action,'local OP="'+op+'"').replace(model,MODEL);
+ const source=TEMPLATE.replace(action,'local OP="'+op+'"').replace(model,MODEL);
+ // Strip full-line comments and indentation; preserve Lua line boundaries.
+ const code=source.split('\n').map(line=>line.trim())
+  .filter(line=>line.length>0&&!line.startsWith('--')).join('\n');
  if(Buffer.byteLength(code)>8192)throw Error('Canonical focus payload exceeds Balatro RPC limit');
  return code;
 }
 function parse(reply,op){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Invalid focus RPC framing');
- const m=/^IZ2S_FOCUS_V1;phase=(idle|blocked|running);view=(none|conflict|home|picker);selected=(0|[1-9][0-9]?);installed=(0|[1-9][0-9]?);frames=(0|[1-9][0-9]{0,8});inputs=(0|[1-9][0-9]{0,8});errors=(0|[1-9][0-9]{0,8})$/.exec(reply.slice(3).trim());
+ const m=/^IZ2S_FOCUS_V1;phase=(idle|blocked|running);view=(none|conflict|home|picker);selected=(0|[1-9][0-9]?);installed=(0|[1-9][0-9]?);frames=(0|[1-9][0-9]{0,8});inputs=(0|[1-9][0-9]{0,8});errors=(0|[1-9][0-9]{0,8});drawhook=([01]);inputhook=([01]);callbacks=(0|[1-9][0-9]{0,8})$/.exec(reply.slice(3).trim());
  if(!m)throw Error('Invalid canonical focus response');
- const [,phase,view,rawSelection,rawInstalled,rawFrames,rawInputs,rawErrors]=m;
+ const [,phase,view,rawSelection,rawInstalled,rawFrames,rawInputs,rawErrors,drawHook,inputHook,callbacks]=m;
  const selected=Number(rawSelection),installed=Number(rawInstalled);
  if(installed>15||selected>installed||
     (phase==='idle'&&(view!=='none'||selected!==0||installed!==0))||
     (phase==='blocked'&&(view!=='conflict'||selected!==0||installed!==0))||
     (phase==='running'&&!['home','picker'].includes(view))||
     (op==='stop'&&phase!=='idle')||
+    (phase!=='running'&&(drawHook==='1'||inputHook==='1'||Number(callbacks)!==0))||
     (phase==='blocked'&&op!=='start'))
   throw Error('Contradictory canonical focus state');
  return {backend:'balatro',mode:'canonical-iz2s-lua-view-port',
   phase,view,selected,installed,renderedFrames:Number(rawFrames),
   controllerEvents:Number(rawInputs),drawErrors:Number(rawErrors),
+  drawHookInstalled:drawHook==='1',inputHookInstalled:inputHook==='1',
+  drawCallbacks:Number(callbacks),
   usesOriginalLayoutSource:true,catalogVerified:false,
   nativeSupervisorRunning:false,nativeCoreReady:false,ready:false};
 }
