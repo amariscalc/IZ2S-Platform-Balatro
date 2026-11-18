@@ -1,5 +1,5 @@
 'use strict';
-const {evaluate,requireNativeEntry}=require('../../../../../../../../core/console/sd-launcher/entry-contract.cjs');
+const {evaluate,requireNativeEntry}=require('../../../../../../../core/console/sd-launcher/entry-contract.cjs');
 const {inspect}=require('./native-launch-gate.cjs');
 const {assess}=require('./readiness-gap.cjs');
 // Keep the existing Balatro RPC and Lua diagnostics separate from the
