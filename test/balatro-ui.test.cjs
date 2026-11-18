@@ -32,7 +32,8 @@ test('selector has no mutation observer or native launch actions', () => {
   assert.doesNotMatch(source, /\/api\/start\b|\/api\/launch-settings\b/);
 });
 test('Balatro mode isolates its own dashboard from original controls', () => {
-  assert.match(source, /#setup\.balatro-experimental > :not\(\.game-selector\):not\(#balatro-diagnostic-panel\)/);
+  const css = fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.css'),'utf8');
+  assert.match(css, /#setup\.balatro-experimental > :not\(\.game-selector\):not\(#balatro-diagnostic-panel\)/);
   assert.match(source, /dashboard\.className = 'balatro-dashboard'/);
   assert.match(source, /capabilities\.className = 'balatro-caps'/);
 });
@@ -40,4 +41,10 @@ test('technical JSON is collapsible and not the default view', () => {
   assert.match(source, /technical\.className = 'balatro-technical'/);
   assert.match(source, /technical\.open = false/);
   assert.match(source, /technical\.append\(technicalTitle, result\)/);
+});
+
+test('Balatro CSS is CSP-compatible and served by the panel', () => {
+  assert.match(html, /href="\/balatro-diagnostics\.css\?v=2"/);
+  assert.match(server, /['"]\/balatro-diagnostics\.css['"]\s*:/);
+  assert.doesNotMatch(source, /document\.createElement\(['"]style['"]\)/);
 });
