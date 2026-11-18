@@ -16,14 +16,16 @@ function script(op){
 }
 function parse(reply,op){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Unexpected launcher RPC framing');
- const m=/^IZ2S_LAUNCHER_V1;phase=(running|idle);menu=([0-6]);page=(none|home|dashboard|rpc|memory|native|about);overlay=(true|false);controls=(true|false)$/.exec(reply.slice(3).trim());
+ const m=/^IZ2S_LAUNCHER_V1;phase=(running|idle|blocked);menu=([0-6]);page=(none|home|dashboard|rpc|memory|native|about|legacy);overlay=(true|false);controls=(true|false)$/.exec(reply.slice(3).trim());
  if(!m)throw Error('Invalid launcher response');
  const result={backend:'balatro',mode:'title-local-iz2s-frontend',
   phase:m[1],menu:Number(m[2]),page:m[3],overlay:m[4]==='true',
   controls:m[5]==='true',nativeCoreLaunched:false,nativeCoreReady:false,ready:false};
- if((result.phase==='idle'&&(result.menu!==0||result.page!=='none'||result.overlay||result.controls))||
+ if((result.phase==='blocked'&&(result.menu!==0||result.page!=='legacy'||result.overlay||result.controls))||
+    (result.phase==='idle'&&(result.menu!==0||result.page!=='none'||result.overlay||result.controls))||
     (result.phase==='running'&&(result.menu<1||result.page==='none')))
   throw Error('Contradictory launcher response');
+ if(result.phase==='blocked'&&op!=='start')throw Error('Unexpected launcher conflict status');
  if(op==='stop'&&result.phase!=='idle')throw Error('Launcher did not stop');
  return result;
 }
