@@ -7,9 +7,10 @@ const {inspect,gate,BIN,MANIFEST,REQUIRED}=require('../engines/iz2s-core/runtime
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 function fixture({corrupt=false,missing=false}={}){
  const bin=Buffer.from('canonical-launcher-fixture');
- const source=Buffer.from('source');
  const native=path.posix.dirname(path.posix.dirname(BIN));
  const sourcePath=path.posix.normalize(native+'/launcher.c');
+ // The manifest must hash the SAME file contents used by REQUIRED markers.
+ const source=Buffer.from(REQUIRED.find(([name])=>name===sourcePath)[1].join('\n'));
  const manifest={format:'iz-sd-launcher-native-v1',bytes:bin.length,sha256:sha(bin),
   layout:{owner:9200,status_bytes:9200,owner_bytes:2920},
   sources:{'launcher.c':sha(source)}};
@@ -50,4 +51,22 @@ test('canonical native launch remains blocked even when all artifacts are presen
  assert.equal(r.nativeTransportReady,false);
  assert.equal(r.filesystemSessionReady,false);
  assert.equal(r.ready,false);
+});
+
+test('fixture manifest reflects the same canonical source used by required markers',()=>{
+ const good=inspect('/irrelevant',fixture());
+ assert.equal(good.phase,'verified',JSON.stringify(good.failures));
+ assert.equal(good.sourceIntegrityVerified,true);
+ assert.equal(good.missingStartupMarkers.length,0);
+});
+
+test('a source whose bytes change without updating its manifest fails integrity',()=>{
+ const original=fixture();
+ const changed=name=>name.endsWith('/native/launcher.c')
+  ?Buffer.from('altered native launcher')
+  :original(name);
+ const report=inspect('/irrelevant',changed);
+ assert.equal(report.phase,'blocked');
+ assert.ok(report.failures.some(row=>row.label==='manifest-source'));
+ assert.ok(report.missingStartupMarkers.some(row=>row.file.endsWith('/native/launcher.c')));
 });
