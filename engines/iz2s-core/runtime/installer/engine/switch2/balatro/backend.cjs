@@ -10,6 +10,7 @@ const {inspect:inspectFfiNames}=require('./ffi-names.cjs');
 const {assessProfile}=require('./ffi-contract.cjs');
 const {inspect:inspectNativeBridge}=require('./native-bridge-check.cjs');
 const {inspect:inspectNativeDeclaration}=require('./native-declare-check.cjs');
+const {inspect:inspectNativeCall}=require('./native-call-smoke.cjs');
 class UnsupportedNativeCapability extends Error {
   constructor(operation){
     super('Balatro native transport does not implement '+operation);
@@ -30,10 +31,11 @@ function createBalatroBackend({
   ffiNames=inspectFfiNames,
   bridgePreflight=inspectNativeBridge,
   declarationPreflight=inspectNativeDeclaration,
+  nativeCallSmoke=inspectNativeCall,
 }={}){
   if(typeof capabilityAudit!=='function'||typeof menuExecute!=='function'||
     typeof menuObserve!=='function'||typeof ffiProfile!=='function'||typeof ffiNames!=='function'||
-    typeof bridgePreflight!=='function'||typeof declarationPreflight!=='function')throw Error('Invalid Balatro backend dependencies');
+    typeof bridgePreflight!=='function'||typeof declarationPreflight!=='function'||typeof nativeCallSmoke!=='function')throw Error('Invalid Balatro backend dependencies');
   const backend={
     id:'balatro',kind:'title-local-lua',port:9026,
     async probe(host,options){
@@ -64,6 +66,9 @@ function createBalatroBackend({
     },
     async inspectNativeDeclaration(host,options){
       return declarationPreflight(host,options);
+    },
+    async inspectNativeCall(host,options){
+      return nativeCallSmoke(host,options);
     },
     async planFfi(host,declaration,options){
       // Data-only assessment: this does not invoke FFI or expose a raw pointer.
