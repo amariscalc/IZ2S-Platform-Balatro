@@ -32,7 +32,7 @@ local function draw()
    g.circle("fill",x,y,3)
   end
   g.setColor(C.ink);g.print("IZ2S",96,68,0,3.2,3.2)
-  g.setColor(C.muted);g.print("ORBIT FOCUS  /  LUA PORT",100,178,0,1.3,1.3)
+  g.setColor(C.muted);g.print("ORBIT FOCUS",100,178,0,1.3,1.3)
   local hasApps=app.model.installed>0
   if app.model.picking then
    g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
@@ -65,7 +65,7 @@ local function draw()
    g.setColor(C.muted);g.print("LEFT / RIGHT  SELECT     A  OPEN",110,1008,0,1.25,1.25)
   end
   g.setColor(C.muted)
-  g.print("LUA VIEW PORT - NATIVE IZ2S SUPERVISOR NOT RUNNING",955,1015,0,1.0,1.0)
+  g.print("IZ2S LUA PORT - NATIVE OFFLINE",955,1015,0,1.0,1.0)
   if app.model.notice then g.setColor(C.accent);g.print(app.model.notice,115,895,0,1.2,1.2) end
  end)
  pcall(g.pop)
