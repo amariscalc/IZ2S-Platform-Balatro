@@ -449,3 +449,15 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/ffi-names.cjs 19
 ```
 
 The Balatro backend also provides `inspectFfiNames(host)`. Depending on LuaJIT debug availability, the probe may return `unavailable` or unnamed arguments. Parameter names are informative, not a proof of their meaning, native ABI support, memory access, service permissions or native core startup. `ready` remains false.
+
+### Source-backed Balatro FFI ABI mapping (2026-11-18)
+
+Reviewed upstream `Luminger/balatro-switch-rce/src/bl/call.lua` and `src/bl/ffi_call.lua`. The actual Lua wrappers are `declare(ret,args,address)` and `invoke(target,...)`. Upstream `declare` returns an ordinary Lua function, while the legacy `invoke` returns a result table with `raw`, `int32` and `int64`. For source and usage details see https://github.com/Luminger/balatro-switch-rce/blob/main/src/bl/call.lua and https://github.com/Luminger/balatro-switch-rce/blob/main/src/bl/ffi_call.lua .
+
+The data-only `ffi-contract.cjs` validator now translates internal descriptor labels to the upstream C type vocabulary, e.g. `u32 -> uint32_t`, `pointer -> void *`, `f64 -> double`, and accepts selected pointer spellings and scalar C types. It enforces at most 8 GP and 8 FP register arguments, rejects structures and variadics, and only accepts symbolic `sdk:...` targets.
+
+**No native call is made.** The source mapping does not prove that a specific console image supports any target address or that `ldr:ro`, service IPC or IZ2S startup is available. Avoid directly invoking LuaJIT cdata function pointers on this title; upstream documents a fatal interpreter bug. The backend continues to report `ready:false`.
+
+```powershell
+node --test test/balatro-ffi-contract.test.cjs test/balatro-backend.test.cjs
+```
