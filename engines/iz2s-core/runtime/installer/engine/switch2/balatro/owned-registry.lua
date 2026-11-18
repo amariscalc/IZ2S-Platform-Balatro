@@ -76,8 +76,9 @@ if not worked then
  local labels={"quota","stale_handle","bounds","invalid_byte",
                "overlap_refused","invalid_handle","invalid_operation"}
  local message=tostring(result)
+ local tail=message:match("([%a_]+)$")
  for _,label in ipairs(labels) do
-  if message==label then return reply("blocked",label,0) end
+  if tail==label then return reply("blocked",label,0) end
  end
  return reply("blocked","operation_failed",0)
 end
