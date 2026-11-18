@@ -32,3 +32,15 @@ test('failure releases busy state',async()=>{
   await assert.rejects(s.run('192.168.0.2'),/offline/);
   assert.equal(count,2);
 });
+
+test('Balatro browser script is actually registered as a served panel asset',()=>{
+  const fs=require('node:fs');
+  const path=require('node:path');
+  const http=fs.readFileSync(path.join(__dirname,'../panel/http.cjs'),'utf8');
+  const html=fs.readFileSync(path.join(__dirname,'../panel/ui/panel.html'),'utf8');
+  const js=fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.js'),'utf8');
+  assert.match(http, /['"]\/balatro-diagnostics\.js['"]\s*:\s*\[['"]balatro-diagnostics\.js['"]/);
+  assert.match(html, /<script[^>]+src=['"]\/balatro-diagnostics\.js\?v=/);
+  assert.match(js, /getElementById\(['"]balatro-audit-run['"]\)/);
+  assert.match(js, /addEventListener\(['"]click['"]/);
+});
