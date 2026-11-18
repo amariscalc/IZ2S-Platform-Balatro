@@ -598,3 +598,17 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/persistent-memor
 ```
 
 If `init` reports `already_initialized`, **do not clear the registry blindly**; determine ownership first. The integrated test clears only the registry after its own successful initialization. If an RPC hangs or the title restarts, investigate rather than retrying automatically. Until the live suite confirms, `persistentAcrossRpcConnections` must not be treated as verified on this console.
+
+### Follow-up fix: default `status` template (2026-11-18)
+
+A live attempt returned `Invalid Lua registry script` after the quota parser fix. This was caused by the Node template builder rejecting an **unchanged** script. `status` with zero arguments legitimately uses the default `owned-registry.lua` source, so the client now validates that the five expected substitution anchors are present, permits unchanged `status`, and still enforces the 8192-byte request limit. Regression coverage verifies `script('status', []) === TEMPLATE`.
+
+The line `No raw address ingress or egress` visible on the Switch 2 is a **source-code comment** in `owned-registry.lua`, not a console error code. If code or logs appear on screen, that alone does not establish a new memory capability.
+
+```powershell
+git pull
+node --test test/balatro-owned-registry.test.cjs test/balatro-persistent-memory-suite.test.cjs test/balatro-backend.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/persistent-memory-suite.cjs 192.168.1.232
+```
+
+The suite's `clear` is restricted to the registry it successfully initialized; if the command returns `already_initialized`, do not blindly delete state.
