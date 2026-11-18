@@ -21,6 +21,7 @@ test('overlap blocked, state released on failure',async()=>{
   const s=create({probe:()=>{count++;return new Promise(r=>{release=r;});}});
   const pending=s.run('10.0.0.2');
   await assert.rejects(s.run('10.0.0.2'),/already in progress/);
+  await Promise.resolve();
   release({capabilities:{}});
   await pending;
   assert.equal(count,1);
