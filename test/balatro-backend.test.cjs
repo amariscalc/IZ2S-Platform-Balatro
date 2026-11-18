@@ -17,6 +17,11 @@ function fixture(){
   menuObserve:async(host,options)=>{
    calls.push(['observe',host,options]);return {phase:'running',gamepad:true};
   },
+  ownedLifecycleSmoke:async(host,options)=>{
+   calls.push(['owned-lifecycle',host,options]);
+   return {backend:'balatro',mode:'owned-lua-ffi-lifecycle',
+    allocationVerified:true,nativeHeapFreeVerified:false,ready:false};
+  },
   nativeCallSmoke:async(host,options)=>{
    calls.push(['native-call',host,options]);
    return {backend:'balatro',mode:'read-only-sdk-native-call',nativeCallVerified:true,ready:false};
@@ -90,6 +95,12 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.equal(owned.ready,false);
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
   'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer']);
+ const lifecycle=await backend.inspectOwnedLifecycle('192.168.1.232');
+ assert.equal(lifecycle.allocationVerified,true);
+ assert.equal(lifecycle.nativeHeapFreeVerified,false);
+ assert.equal(lifecycle.ready,false);
+ assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
+  'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer','owned-lifecycle']);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
