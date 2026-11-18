@@ -93,7 +93,7 @@ local function hookInput()
  local function add(name,map)
   local original=handlers[name]
   if type(original)~="function" then return end
-  if app.hooks[name] and handlers[name]==app.hooks[name].wrapper then return end
+  if app.hooks[name] and handlers[name]==app.hooks[name].wrapper then active=true;return end
   local function wrapper(a,b,...)
    local key=name=="gamepadpressed" and b or a
    local action=map[key]
