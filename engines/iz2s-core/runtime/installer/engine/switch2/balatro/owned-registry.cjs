@@ -16,13 +16,17 @@ function script(op,args=[]){
  if(!OPS.includes(op))throw Error('Unsupported registry operation');
  if(!Array.isArray(args)||args.length>4)throw Error('Invalid registry arguments');
  const nums=Array.from({length:4},(_,i)=>uint(args[i]??0,65535,'registry integer'));
+ const markers=['local OP="status"','local A=0','local B=0','local C=0','local D=0'];
+ // A valid status operation uses the default template. Validate anchors.
+ if(markers.some(marker=>!TEMPLATE.includes(marker)))
+  throw Error('Invalid Lua registry template');
  const source=TEMPLATE
-  .replace('local OP="status"',`local OP="${op}"`)
-  .replace('local A=0',`local A=${nums[0]}`)
-  .replace('local B=0',`local B=${nums[1]}`)
-  .replace('local C=0',`local C=${nums[2]}`)
-  .replace('local D=0',`local D=${nums[3]}`);
- if(source===TEMPLATE||Buffer.byteLength(source)>8192)throw Error('Invalid Lua registry script');
+  .replace(markers[0],`local OP="${op}"`)
+  .replace(markers[1],`local A=${nums[0]}`)
+  .replace(markers[2],`local B=${nums[1]}`)
+  .replace(markers[3],`local C=${nums[2]}`)
+  .replace(markers[4],`local D=${nums[3]}`);
+ if(Buffer.byteLength(source)>8192)throw Error('Invalid Lua registry script');
  return source;
 }
 function parse(reply,op){
