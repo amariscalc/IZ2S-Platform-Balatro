@@ -181,6 +181,7 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
   'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
   'owned-lifecycle','owned-handles','memory-suite','registry','persistent-suite',
   'launcher','launcher-integration','launcher-telemetry','launcher-activity']);
+ assert.equal(typeof backend.inspectCanonicalLauncher,'function');
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
