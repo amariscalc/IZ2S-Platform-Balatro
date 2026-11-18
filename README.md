@@ -351,3 +351,13 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/contract-diff.cj
 ```
 
 A successful test means source-contract markers are consistent, **not** that the native loader is compatible. The report intentionally retains `nativeCompatibilityVerified: false` and `ready: false`. This is separate from the live FFI-presence preflight. Original native modules and the other input backends remain unchanged.
+
+### Isolated native transport contract simulation (2026-11-18)
+
+This experiment tests response shapes, buffer-copy semantics, error handling, transfer limits and cleanup **entirely inside Node.js**, with no live console connectivity. It does not implement a native Balatro transport.
+
+```powershell
+node --test test/balatro-mock-native-contract.test.cjs
+```
+
+`mock-native-contract.cjs` uses a 4 KiB synthetic buffer and permits transfers of up to 256 bytes. Its only simulated call is `mock:add-u32`; service IPC, `ldr:ro`, native instruction verification, arbitrary calls, native stores and native batches are rejected. `nativeCompatible` and `ready` always remain false. A passing test confirms simulated interface behavior, not any real Switch privilege or native execution capability.
