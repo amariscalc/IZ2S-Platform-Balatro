@@ -24,3 +24,9 @@ test('diagnostics stay authenticated via application token', () => {
   assert.match(source, /['"]x-iz-key['"]\s*:\s*location\.hash\.slice\(1\)/);
   assert.match(server, /req\.headers\[['"]x-iz-key['"]\]/);
 });
+
+test('selector must never install a DOM mutation observer', () => {
+  assert.doesNotMatch(source, /new\\s+MutationObserver\\s*\\(/);
+  assert.match(source, /function selectBalatro\\s*\\(/);
+  assert.match(source, /function leaveBalatro\\s*\\(/);
+});
