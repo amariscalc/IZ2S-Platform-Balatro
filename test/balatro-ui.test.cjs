@@ -57,3 +57,15 @@ test('read-only state route and controls belong to Balatro dashboard', () => {
   const css=fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.css'),'utf8');
   assert.match(css, /\.balatro-controls/);
 });
+
+test('exclusive Balatro visual highlight overrides core engine selection', () => {
+ const css=fs.readFileSync(path.join(__dirname,'../panel/ui/balatro-diagnostics.css'),'utf8');
+ assert.match(css, /#setup\.balatro-experimental \.game-selector #game-sm4\.selected/);
+ assert.match(css, /#setup\.balatro-experimental \.game-selector #game-balatro/);
+ assert.match(source, /smilebasic\.setAttribute\('aria-pressed', 'false'\)/);
+});
+test('clearing Balatro session uses authenticated no-payload API', () => {
+ assert.match(source, /\/api\/balatro\/disconnect/);
+ assert.match(server, /\/api\/balatro\/disconnect/);
+ assert.match(source, /disconnectButton\.addEventListener\('click'/);
+});

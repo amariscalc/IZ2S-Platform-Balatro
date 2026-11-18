@@ -210,6 +210,12 @@ async function createWindowServer({
       }
       if (req.method === 'GET' && url.pathname === '/api/balatro/status')
         return reply(res, 200, balatroDiagnostics.snapshot());
+      if (req.method === 'POST' && url.pathname === '/api/balatro/disconnect') {
+        if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
+        const body = await readBody(req, 256);
+        if (!body || Object.keys(body).length) return reply(res, 400, {error: 'Disconnect takes no arguments'});
+        return reply(res, 200, balatroDiagnostics.disconnect());
+      }
       if (req.method === 'POST' && url.pathname === '/api/balatro/diagnose') {
         if (closing) return reply(res, 503, {error: 'The panel is shutting down.'});
         const data = await readBody(req, 1024);

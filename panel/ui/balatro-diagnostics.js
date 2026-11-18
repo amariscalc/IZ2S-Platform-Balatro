@@ -41,6 +41,12 @@
   const inputLabel = details.querySelector('label[for="balatro-audit-host"]');
   if (inputLabel) controls.append(inputLabel);
   controls.append(host, btn);
+  const disconnectButton = document.createElement('button');
+  disconnectButton.id = 'balatro-disconnect';
+  disconnectButton.type = 'button';
+  disconnectButton.className = 'balatro-disconnect';
+  disconnectButton.textContent = 'Clear RPC session';
+  controls.append(disconnectButton);
   dashboard.append(heading, notice, controls, status, capabilities);
   // Reuse original host input and audit button, but move the verbose JSON into
   // an explicitly collapsible technical section.
@@ -97,6 +103,8 @@
     if (smilebasic.disabled && civilization.disabled) return;
     setup.classList.add('balatro-experimental');
     balatro.setAttribute('aria-pressed', 'true');
+    smilebasic.setAttribute('aria-pressed', 'false');
+    civilization.setAttribute('aria-pressed', 'false');
     details.open = true;
     if (!status.textContent) setStatus('Ready to check Balatro', 'Enter the console IP and select Check Balatro RPC.');
     void restoreStatus();
@@ -105,6 +113,25 @@
     setup.classList.remove('balatro-experimental');
     balatro.setAttribute('aria-pressed', 'false');
   }
+  disconnectButton.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    disconnectButton.disabled = true;
+    try {
+      const response = await fetch('/api/balatro/disconnect', {
+        method: 'POST',
+        headers: {'content-type':'application/json', 'x-iz-key':location.hash.slice(1)},
+        body: '{}',
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error || 'Failed to reset diagnostic session');
+      capabilities.replaceChildren();
+      result.textContent = '';
+      technical.open = false;
+      setStatus('Diagnostic session cleared', 'No RPC connection was changed on the console. You may run a new check.');
+    } catch (error) {
+      setStatus('Unable to clear diagnostic session', error.message);
+    } finally {disconnectButton.disabled = false;}
+  });
   balatro.addEventListener('click', selectBalatro);
   smilebasic.addEventListener('click', leaveBalatro, {capture:true});
   civilization.addEventListener('click', leaveBalatro, {capture:true});

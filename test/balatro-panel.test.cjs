@@ -58,3 +58,25 @@ test('status snapshot is a read-only lifecycle view', async () => {
   assert.equal(status.ready,false);
   assert.equal(checks,1);
 });
+
+test('disconnect clears only local diagnostic state, never privileges', async () => {
+  let finish;
+  const s = create({probe: () => new Promise(resolve => {finish = resolve;})});
+  const pending = s.run('192.168.1.232');
+  await Promise.resolve();
+  const disconnected = s.disconnect();
+  assert.equal(disconnected.phase,'idle');
+  assert.equal(disconnected.ready,false);
+  finish({capabilities:{ffi_module_loaded:true}});
+  await assert.rejects(pending,/disconnected/);
+  assert.equal(s.snapshot().phase,'idle');
+});
+test('disconnect from connected leaves idle and never claims native readiness', async () => {
+  const s = create({probe: async () => ({capabilities:{lua:'Lua 5.1'}})});
+  await s.run('192.168.1.232');
+  assert.equal(s.snapshot().phase,'connected');
+  const x = s.disconnect();
+  assert.equal(x.phase,'idle');
+  assert.equal(x.nativeOperationsVerified,false);
+  assert.equal(x.privilegedSessionVerified,false);
+});

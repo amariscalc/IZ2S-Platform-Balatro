@@ -62,3 +62,25 @@
 #balatro-diagnostic-panel .balatro-controls label { margin-right:4px; }
 #balatro-diagnostic-panel .balatro-controls input { min-width:160px; max-width:270px; }
 #balatro-diagnostic-panel .balatro-controls button { min-width:150px; }
+
+/* The core panel re-selects SmileBASIC on refresh; Balatro owns visual selection in this view only. */
+#setup.balatro-experimental .game-selector #game-sm4,
+#setup.balatro-experimental .game-selector #game-sm4.selected,
+#setup.balatro-experimental .game-selector #game-civ7,
+#setup.balatro-experimental .game-selector #game-civ7.selected {
+  background: #1c261f !important;
+  border-color: #2c3830 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: #eff3ee !important;
+}
+#setup.balatro-experimental .game-selector #game-balatro {
+  background: #2a3821 !important;
+  border-color: #b0d838 !important;
+  outline: 2px solid #b0d838 !important;
+  box-shadow: none !important;
+}
+#balatro-diagnostic-panel .balatro-disconnect {
+  border: 1px solid #59695d;
+  color: #d5ded6;
+}

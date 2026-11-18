@@ -13,6 +13,8 @@
 | IZ2S panel diagnostics, experimental Balatro selection | Integrated; user-tested |
 | Separate Balatro diagnostic lifecycle (idle / checking / connected / unavailable) | Implemented; requires regression verification for this revision |
 | Local authenticated GET status snapshot | Implemented; read-only |
+| Clear local Balatro diagnostic session | Implemented; does not close the game or change console state |
+| Exclusive Balatro highlight in panel | Updated to override the original SmileBASIC selection while in Balatro view; awaiting browser verification |
 | Native memory read/write, Horizon IPC, privileged access | **Not implemented or verified** |
 | Loading the IZ2S native core from Balatro | **Not implemented** |
 
@@ -25,7 +27,7 @@ node --test test/balatro-*.test.cjs
 node start.cjs --preview
 ```
 
-Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications.
+Open the local panel, select **Balatro (experimental)**, enter your Switch's LAN IP and click **Check Balatro RPC**. The dedicated view shows capability cards. Technical JSON is collapsible. The original launcher controls are hidden in this view, not removed from the original applications. **Clear RPC session** resets only local diagnostic state; it does not close Balatro or invalidate its Lua RPC listener.
 
 A CLI alternative, with the RPC listener already active:
 
@@ -36,6 +38,8 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/diagnose.cjs 192
 Use your console's actual address. Balatro's RPC is unauthenticated and unencrypted: use a trusted private LAN only. The panel checks private IPv4 addresses and requires its normal token. No credentials or save files belong in Git.
 
 **Current limitation:** `ready: false` is intentional. An available FFI function does not prove that the process can perform the privileged operations IZ2S requires.
+
+This fork deliberately does **not** implement a native call bridge, kernel exploit, or a replacement for the required IZ2S privilege checks. The next engineering focus is explicit session lifecycle behavior and a verified compatibility matrix for any unprivileged operations.
 
 See [Balatro backend technical notes](docs/balatro-backend.md). Changes to this fork's Balatro backend should update this README in the same commit or push, keeping verified features and limitations accurate.
 
