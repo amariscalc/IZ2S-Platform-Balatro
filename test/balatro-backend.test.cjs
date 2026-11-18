@@ -135,6 +135,10 @@ test('the Balatro backend uses live Lua APIs and never implies native readiness'
  assert.deepEqual(calls.map(x=>x[0]),['probe','menu','observe','ffi-profile','ffi-profile',
   'ffi-names','bridge-preflight','declaration-preflight','native-call','owned-buffer',
   'owned-lifecycle','owned-handles','memory-suite','registry','persistent-suite']);
+ const gap=backend.assessNativeReadiness();
+ assert.equal(gap.stages.length,7);
+ assert.equal(gap.nativeCoreReady,false);
+ assert.equal(gap.ready,false);
  assert.equal(backend.nativeStatus().ready,false);
 });
 test('all unsupported native operations reject with explicit error code',async()=>{
