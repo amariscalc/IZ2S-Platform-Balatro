@@ -58,7 +58,11 @@ local function navigate(action)
  if not app then return end
  local model=app.model
  if app.detail then
-  if action=="back" or action=="select" then app.detail=nil end
+  if action=="back" then app.detail=nil;model.notice=nil
+  elseif action=="select" and app.detail.id=="book-reader" then
+   app.bookReaderLaunchRequests=math.min(999999999,(app.bookReaderLaunchRequests or 0)+1)
+   model.notice="BOOK READER: NATIVE LAUNCH NOT AVAILABLE"
+  elseif action=="select" then app.detail=nil end
   return
  end
  if action=="left" then Model.step(model,-1)
