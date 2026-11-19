@@ -10,11 +10,11 @@ The upstream **SmileBASIC** and **Civilization VII** entry methods remain separa
 
 - Balatro's Lua RPC listener is reachable over TCP **9026**, and LuaJIT/FFI interfaces are available.
 - The **ORBIT FOCUS** Lua view is visible on the Switch 2 screen. It displays the IZ2S title, **ADD** card and **BROWSE** screen, using layout geometry and colors derived from the upstream shaders.
-- The gamepad works with the Lua view: a live session recorded **16 controller events** and successfully navigated from **HOME** to **BROWSE**.
+- The gamepad works with the Lua view: a later session recorded **30 controller events**, and BROWSE visually displayed the six source-index entries with the first card highlighted.
 - The same session reported **9,401 rendered frames**, **9,401 draw callbacks**, **0 draw errors** and **0 console draw failures**.
 - The original native launcher binary and its manifest-listed sources pass offline integrity checks. **This does not mean the binary has executed.**
 
-BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. This expanded catalog still requires physical Switch confirmation and does not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
+BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. The six source-index cards have now been visually confirmed on physical Switch hardware (BlitBun, Book Reader, Foldrift, IZ2S Cheese, IZPSX and VacooTube); opening a read-only details page is still awaiting hardware verification. These entries do not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
 
 ### Verified and unverified features
 
@@ -23,12 +23,12 @@ BROWSE first reads verified PC package previews through IZ2S's existing reposito
 | Balatro Lua RPC (TCP 9026) | **Verified on Switch 2** |
 | LuaJIT/FFI, limited SDK calls and title-owned buffers | **Verified within Balatro's existing process**; not a native IZ2S transport |
 | ORBIT FOCUS Lua/LÖVE display | **Verified on screen**; partial port, not pixel-perfect |
-| Controller input and HOME → BROWSE navigation | **Verified on Switch 2**; new package-details navigation pending hardware verification |
+| Controller input and HOME → BROWSE navigation | **Verified on Switch 2**, including highlighted source-index cards; package-details navigation pending |
 | Draw callbacks and rendering | **Verified:** 9,401 frames; 0 draw errors in the recorded session |
 | Original native launcher and source integrity | **Verified offline**; never executed by Balatro |
 | Verified PC package preview in BROWSE | **Implemented**; real PC inventory observed empty on Switch test (0 entries) |
-| Official-version-matched local source descriptor fallback | **Implemented**; hardware verification pending, never installable |
-| Read-only catalog details | **Implemented**; hardware verification pending |
+| Official-version-matched local source descriptor fallback | **Verified visually on Switch 2:** six real metadata entries displayed; never installable |
+| Read-only catalog details | **Implemented**; selection/detail screen still awaits hardware verification |
 | Installed SD app catalog, original icons and artwork | **Not connected** |
 | Application installation and native execution from Balatro | **Not implemented** |
 | Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
