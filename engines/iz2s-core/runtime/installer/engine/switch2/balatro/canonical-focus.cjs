@@ -5,6 +5,8 @@ const fs=require('node:fs'),path=require('node:path');
 const {request}=require('./rpc.cjs');
 const MODEL=fs.readFileSync(path.join(__dirname,'canonical-focus-model.lua'),'utf8');
 const TEMPLATE=fs.readFileSync(path.join(__dirname,'canonical-focus.lua'),'utf8');
+const VISUAL_BASE=fs.readFileSync(path.join(__dirname,'canonical-visual-base.lua'),'utf8');
+const VISUAL_SCENE=fs.readFileSync(path.join(__dirname,'canonical-visual-scene.lua'),'utf8');
 const OPS=Object.freeze(['start','status','left','right','select','back','stop']);
 const MODEL_KEY='__IZ2S_CANONICAL_FOCUS_MODEL_V1';
 function compact(source){
@@ -26,6 +28,14 @@ function script(op){
  if(!TEMPLATE.includes(action)||!TEMPLATE.includes(MODEL_KEY))
   throw Error('Invalid canonical focus source');
  return withinLimit(compact(TEMPLATE.replace(action,'local OP="'+op+'"')));
+}
+function visualScript(stage){
+ if(!['base','scene'].includes(stage))throw Error('Invalid visual stage');
+ return withinLimit(compact(stage==='base'?VISUAL_BASE:VISUAL_SCENE));
+}
+function parseVisual(reply,stage){
+ if(typeof reply!=='string'||reply.trim()!=='-> IZ2S_VISUAL_V1;stage='+stage+';ok=1')
+  throw Error('ORBIT FOCUS '+stage+' visual stage could not initialize');
 }
 function parseModel(reply){
  if(typeof reply!=='string'||reply.trim()!=='-> IZ2S_FOCUS_MODEL_V1;state=ready')
@@ -58,7 +68,11 @@ function parse(reply,op){
 }
 async function execute(host,op,options={},send=request){
  const transport={host,port:9026,timeoutMs:5000,...options};
- if(op==='start')parseModel(await send({...transport,lua:modelScript()}));
+ if(op==='start'){
+  parseModel(await send({...transport,lua:modelScript()}));
+  for(const stage of ['base','scene'])
+   parseVisual(await send({...transport,lua:visualScript(stage)}),stage);
+ }
  return parse(await send({...transport,lua:script(op)}),op);
 }
 async function main(){
@@ -71,4 +85,4 @@ async function main(){
  catch(e){console.error(JSON.stringify({backend:'balatro',phase:'error',ready:false,error:e.message}));process.exitCode=1;}
 }
 if(require.main===module)main();
-module.exports={MODEL,TEMPLATE,OPS,MODEL_KEY,modelScript,parseModel,script,parse,execute};
+module.exports={MODEL,TEMPLATE,VISUAL_BASE,VISUAL_SCENE,OPS,MODEL_KEY,modelScript,parseModel,visualScript,parseVisual,script,parse,execute};
