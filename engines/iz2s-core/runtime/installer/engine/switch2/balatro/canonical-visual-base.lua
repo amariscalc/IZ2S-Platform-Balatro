@@ -15,8 +15,20 @@ end
 function V.box(g,x,y,w,h,r,outline)
  g.rectangle(outline and "line" or "fill",x,y,w,h,r or 0,r or 0)
 end
+function V.texture(g,a,id)
+ a.images=a.images or {}
+ if a.images[id] then return a.images[id] end
+ local data=a.sprites and a.sprites[id]
+ if not data then return nil end
+ local ok,image=pcall(g.newImage,data)
+ if not ok or not image then return nil end
+ if image.setFilter then pcall(image.setFilter,image,"linear","linear") end
+ a.images[id]=image
+ a.sprites[id]=nil
+ return image
+end
 function V.text(g,a,key,x,y,fallback,size,scale)
- local sprite=a.images and a.images["type-"..key]
+ local sprite=V.texture(g,a,"type-"..key)
  if sprite then
   local ok=pcall(g.draw,sprite,x,y,0,scale or 1,scale or 1)
   if ok then return end
@@ -24,13 +36,12 @@ function V.text(g,a,key,x,y,fallback,size,scale)
  g.print(fallback,x,y,0,size or 1,size or 1)
 end
 function V.icon(g,a,id,x,y,size)
- local image=a.images and a.images[id]
+ local image=V.texture(g,a,id)
  if not image then return false end
  local ok,w,h=pcall(function() return image:getDimensions() end)
  if not ok or not w or w<=0 or not h or h<=0 then return false end
  local scale=math.min(size/w,size/h)
- local painted=pcall(g.draw,image,x,y,0,scale,scale,w/2,h/2)
- return painted
+ return pcall(g.draw,image,x,y,0,scale,scale,w/2,h/2)
 end
 function V.motion(a)
  a.motion=a.motion or {flow=0,tick=0,page=0}
