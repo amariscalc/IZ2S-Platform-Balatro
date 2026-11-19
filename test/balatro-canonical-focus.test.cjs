@@ -105,3 +105,10 @@ test('canonical picker draws real package-preview names, never fabricated instal
  assert.match(TEMPLATE,/app\.model\.selected==i-1/);
  assert.match(TEMPLATE,/NO VERIFIED PACKAGE SOURCE/);
 });
+
+test('PC preview picker navigation does not pretend packages were installed',()=>{
+ const r=parse('-> IZ2S_FOCUS_V1;phase=running;view=picker;selected=3;installed=0;frames=12;inputs=4;errors=0;drawhook=1;inputhook=1;callbacks=12;consolecalls=12;consolefailures=0','status');
+ assert.equal(r.selected,3);
+ assert.equal(r.installed,0);
+ assert.equal(r.nativeSupervisorRunning,false);
+});
