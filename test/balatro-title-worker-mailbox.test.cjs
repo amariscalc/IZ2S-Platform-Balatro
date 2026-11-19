@@ -33,3 +33,22 @@ test('each CLI operation sends exactly one bounded Lua request',async()=>{
  }
  assert.equal(count,3);
 });
+
+test('second real command is gated on the prior verified ping and has no duplicate delivery',()=>{
+ assert.match(SCRIPTS.start,/checksum:2/);
+ assert.match(SCRIPTS.checksum,/s.received~=1/);
+ assert.match(SCRIPTS.checksum,/s.checksumSent=true/);
+ assert.match(SCRIPTS.checksum,/checksum-already-sent/);
+ assert.match(SCRIPTS.checksumStatus,/checksum:2:42/);
+ assert.doesNotMatch(SCRIPTS.checksum,/worker:wait|newThread/);
+});
+test('the second fixed worker response is independently verified and never native-ready',()=>{
+ const r=parse('-> IZ2S_MAILBOX_V1;phase=checksum-verified');
+ assert.equal(r.secondCommandRoundtripVerified,true);
+ assert.equal(r.commandRoundtripVerified,false);
+ assert.equal(r.nativeTransportReady,false);
+ assert.equal(r.ready,false);
+ for(const phase of ['checksum-pending','checksum-mismatch','ping-not-verified']){
+  assert.equal(parse('-> IZ2S_MAILBOX_V1;phase='+phase).secondCommandRoundtripVerified,false);
+ }
+});
