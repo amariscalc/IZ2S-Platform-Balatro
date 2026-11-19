@@ -45,7 +45,7 @@ local function card(g,a,p,i,flow,t)
  if cx<240 or cx>1930 then return end
  local selected=a.model.selected==i-1
  local zoom=selected and 1.06 or 1
- local w,h=198*zoom,230*zoom
+ local w,h=184*zoom,204*zoom
  local x,y=cx-w/2,cy-h/2
  if selected then glow(g,cx,cy,22,V.lime,.009) end
  frame(g,x,y,w,h,selected)
@@ -122,15 +122,16 @@ local function picker(g,a,m)
  else
   local active=a.catalog[a.model.selected+1]
   if active then
-   frame(g,355,290,360,320,true)
-   if not V.icon(g,a,active.id,535,444,210) then
-    V.color(g,V.lime);circle(g,535,434,65,"line")
+   frame(g,115,414,1650,154,false)
+   V.color(g,V.ink,.10);V.box(g,138,427,160,128,12,false)
+   if not V.icon(g,a,active.id,216,491,109) then
+    V.color(g,V.lime);circle(g,216,491,45,"line")
    end
-   V.color(g,V.ink);g.print(active.name,782,340,0,1.95,1.95)
-   V.color(g,V.muted);g.print("VERSION  "..active.version,787,424,0,1.15,1.15)
-   g.print("SOURCE METADATA  /  READ ONLY",787,475,0,1,1)
-   V.color(g,V.lime);V.box(g,785,535,254,65,31,true)
-   g.print("A  DETAILS",810,558,0,1.1,1.1)
+   V.color(g,V.ink);g.print(active.name,339,434,0,1.8,1.8)
+   V.color(g,V.muted);g.print("VERSION  "..active.version,343,489,0,1.1,1.1)
+   g.print("SOURCE METADATA  /  READ ONLY",343,530,0,.95,.95)
+   V.color(g,V.lime);V.box(g,1425,455,261,65,31,true)
+   g.print("A  DETAILS",1460,477,0,1.1,1.1)
   end
   for i,p in ipairs(a.catalog) do card(g,a,p,i,m.flow,m.tick) end
   local page=math.min(a.model.selected+1,count)
