@@ -17,79 +17,35 @@ local function draw()
  local ok=pcall(function()
   local w,h=g.getDimensions()
   local scale=math.min(w/Model.width,h/Model.height)
-  local ox=(w-Model.width*scale)/2
-  local oy=(h-Model.height*scale)/2
-  g.translate(ox,oy);g.scale(scale)
-  local C=Model.colors
-  g.setColor(C.background);g.rectangle("fill",0,0,1920,1080)
-  -- Orbit positioning and curved rail derive from original focus-layout.glsl.
-  g.setColor(0.14,0.19,0.16,0.6)
-  for i=0,28 do
-   local x=140+i*59
-   local y=Model.railY(x)
-   g.circle("fill",x,y,3)
-  end
-  g.setColor(C.ink);g.print("IZ2S",96,68,0,3.2,3.2)
-  g.setColor(C.muted);g.print("ORBIT FOCUS",100,178,0,1.3,1.3)
-  local hasApps=app.model.installed>0
-  if app.detail then
-   local d=app.detail
-   g.setColor(C.ink);g.print("PACKAGE DETAILS",115,286,0,2,2)
-   g.print(d.name,115,410,0,1.6,1.6)
-   g.setColor(C.muted);g.print("VERSION  "..d.version,115,485,0,1.2,1.2)
-   g.print("ID  "..d.id,115,538,0,1.2,1.2)
-   g.print((app.catalogKind=="source" and "SOURCE SHA256  " or "PACKAGE SHA256  ")..d.sha256:sub(1,32),115,600)
-   g.print(d.sha256:sub(33),115,634)
-   g.setColor(C.accent);g.print(app.catalogKind=="source" and "SOURCE ONLY - NOT INSTALLABLE" or "PC PREVIEW - NOT INSTALLED",115,735,0,1.25,1.25)
-   g.print("B  BACK",115,977,0,1.2,1.2)
-  elseif app.model.picking then
-   g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
-   if app.catalog and #app.catalog>0 then
-    g.setColor(C.muted);g.print(app.catalogKind=="source" and "SOURCE INDEX - NOT INSTALLED" or "PC PREVIEW - NOT INSTALLED",115,354,0,1.2,1.2)
-    for i,p in ipairs(app.catalog) do
-     local x,y=Model.cardCenter(i-1,app.model.flow)
-     if x>280 and x<1870 then
-      g.setColor(C.panel);g.rectangle("fill",x-105,y-109,210,218,14,14)
-      g.setColor(app.model.selected==i-1 and C.accent or C.muted)
-      g.rectangle("line",x-105,y-109,210,218,14,14)
-      g.print(p.name:sub(1,23),x-90,y+41)
-      g.print(p.version,x-90,y+72)
-     end
-    end
-   else g.setColor(C.muted);g.print("NO VERIFIED PACKAGE SOURCE",115,354,0,1.25,1.25) end
-   g.print("B  BACK",110,977,0,1.35,1.35)
+  g.translate((w-Model.width*scale)/2,(h-Model.height*scale)/2)
+  g.scale(scale)
+  local scene=rawget(_G,"__IZ2S_FOCUS_SCENE_V1")
+  if type(scene)=="function" then
+   scene(app,g)
   else
-   local hx,hy=535,400
-   g.setColor(C.panel);g.rectangle("fill",hx-180,hy-184,360,368,29,29)
-   g.setColor(C.accent);g.rectangle("line",hx-180,hy-184,360,368,29,29)
-   g.print(" + ",hx-78,hy-110,0,5.0,5.0)
-   g.setColor(C.ink);g.print("ADD",hx-60,hy+70,0,2.2,2.2)
-   if hasApps then
-    for i=1,app.model.installed do
+   g.setColor(Model.colors.background)
+   g.rectangle("fill",0,0,1920,1080)
+   g.setColor(Model.colors.ink);g.print("IZ2S",96,68,0,3.2,3.2)
+   g.setColor(Model.colors.accent)
+   g.print("ORBIT FOCUS",100,178,0,1.4,1.4)
+   if app.detail then g.print(app.detail.name,130,390,0,2,2)
+   elseif app.model.picking then
+    g.print("BROWSE PACKAGES",115,286,0,2,2)
+    for i,p in ipairs(app.catalog or {}) do
      local x,y=Model.cardCenter(i-1,app.model.flow)
      if x>280 and x<1870 then
-      g.setColor(C.panel);g.rectangle("fill",x-105,y-109,210,218,14,14)
-      g.setColor(i==app.model.selected and C.accent or C.muted)
-      g.rectangle("line",x-105,y-109,210,218,14,14)
-      g.print("APP "..tostring(i),x-73,y+54,0,1.5,1.5)
+      g.rectangle("line",x-105,y-109,210,218)
+      g.print(p.name,x-90,y+40)
      end
     end
-   end
-   g.setColor(C.muted)
-   if not hasApps then
-    g.print("NO VERIFIED APPLICATIONS",784,425,0,1.4,1.4)
-   end
-   g.setColor(C.accent);g.rectangle("line",780,475,245,78,38,38)
-   g.print("A  BROWSE",803,495,0,1.4,1.4)
-   g.setColor(C.ink);g.print("1 / "..tostring(app.model.installed+1),115,950,0,1.3,1.3)
-   g.setColor(C.muted);g.print("LEFT / RIGHT  SELECT     A  OPEN",110,1008,0,1.25,1.25)
+   else g.print("A  BROWSE",535,500,0,1.6,1.6) end
   end
-  g.setColor(C.muted)
-  g.print("IZ2S LUA - NATIVE OFFLINE",955,1015,0,1.0,1.0)
-  if app.model.notice then g.setColor(C.accent);g.print(app.model.notice,115,895,0,1.2,1.2) end
  end)
  pcall(g.pop)
- if ok then countEvents("frames") else countEvents("errors") end
+ if ok then countEvents("frames") else
+  countEvents("errors")
+  app.drawLastError="renderer-failed"
+ end
 end
 local function navigate(action)
  if not app then return end
