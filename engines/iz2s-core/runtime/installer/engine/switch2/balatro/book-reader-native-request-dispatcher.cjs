@@ -31,7 +31,8 @@ async function create({host,packageFile,expectedSha256,supervisor,storage,
  let observed=baseline.consoleSelection.launchRequests;
  let state='armed';
  let result=null;
- async function poll(){
+ let activePoll=null;
+ async function performPoll(){
   if(state!=='armed')return {phase:state,requestCount:observed,executedOnConsole:result?.executedOnConsole===true,ready:result?.ready===true};
   const snapshot=await read();
   if(!exact(snapshot)){state='closed';return {phase:'closed',reason:'selection-or-package-changed',executedOnConsole:false,ready:false};}
@@ -55,6 +56,13 @@ async function create({host,packageFile,expectedSha256,supervisor,storage,
    return {phase:'failed',requestCount:observed,error:String(error?.message||error),
     executionUnverified:true,executedOnConsole:false,ready:false};
   }
+ }
+ // Lock the full read/validate/launch transaction. Concurrent timer callbacks
+ // cannot both observe 'armed' and submit the same native launch.
+ function poll(){
+  if(activePoll)return activePoll;
+  activePoll=performPoll();
+  return activePoll.finally(()=>{activePoll=null;});
  }
  return Object.freeze({
   get state(){return state;},
