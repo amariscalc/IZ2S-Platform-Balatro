@@ -27,9 +27,12 @@ const LUA=[
  ' fsResult=ok and out or "error"',
  'end',
  'if has(th,"newThread") then',
- ' local origin="create"',
+ ' local origin="filedata"',
  ' local ok,out=pcall(function()',
- '  local worker=th.newThread("local n=1+1")',
+ '  if not has(fs,"newFileData") then return "filedata-unsupported" end',
+ '  local data=fs.newFileData("local n=1+1","iz2s-book-reader-worker-probe.lua")',
+ '  origin="create"',
+ '  local worker=th.newThread(data)',
  '  if type(worker)~="userdata" and type(worker)~="table" then return "invalid-worker" end',
  '  origin="start"',
  '  worker:start()',
@@ -44,7 +47,7 @@ const LUA=[
  'end',
  'return "IZ2S_BALATRO_TITLE_OPS_V1;vfs="..fsResult..";worker="..workerResult'
 ].join('\n');
-const RESULTS=new Set(['verified','unsupported','write-failed','read-mismatch','remove-failed','error','invalid-worker','worker-error','create-error','start-error','wait-error','get-error-error']);
+const RESULTS=new Set(['verified','unsupported','write-failed','read-mismatch','remove-failed','error','invalid-worker','worker-error','filedata-error','filedata-unsupported','create-error','start-error','wait-error','get-error-error']);
 function parse(reply){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Invalid Balatro response framing');
  const match=/^IZ2S_BALATRO_TITLE_OPS_V1;vfs=([a-z-]+);worker=([a-z-]+)$/.exec(reply.slice(3).trim());
