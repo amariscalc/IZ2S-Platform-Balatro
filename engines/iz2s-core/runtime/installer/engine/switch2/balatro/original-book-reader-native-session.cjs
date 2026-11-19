@@ -84,4 +84,25 @@ async function launch({supervisor,headerCrc,checks=24,pause=()=>new Promise(r=>s
  }
  return {phase:'native-launch-unconfirmed',executedOnConsole:false,ready:false};
 }
-module.exports={idle,owned,tile,checkInstalledAssets,confirmCatalog,install,launch};
+// Execute the actual native IZ2S path in one sequence. This does not create
+// a native supervisor or grant title-local Balatro RPC access to one.
+async function installAndLaunch(file,options={}){
+ const {supervisor,storage,confirmChecks=16,launchChecks=24,pause}=options;
+ owned(supervisor,storage);
+ if(!Number.isSafeInteger(confirmChecks)||confirmChecks<1||confirmChecks>60||
+    !Number.isSafeInteger(launchChecks)||launchChecks<1||launchChecks>60)
+  throw Error('Invalid Book Reader native launch confirmation limits');
+ const installed=await install(file,options);
+ const catalog=await confirmCatalog({supervisor,headerCrc:installed.headerCrc,
+  checks:confirmChecks,...(pause?{pause}:{})});
+ if(!catalog.nativeCatalogAccepted){
+  return {phase:'native-catalog-pending',id:'book-reader',install:installed,
+   catalog,executedOnConsole:false,ready:false};
+ }
+ const execution=await launch({supervisor,headerCrc:installed.headerCrc,
+  checks:launchChecks,...(pause?{pause}:{})});
+ return {phase:execution.phase,id:'book-reader',install:installed,catalog,
+  execution,executedOnConsole:execution.executedOnConsole===true,
+  ready:execution.ready===true};
+}
+module.exports={idle,owned,tile,checkInstalledAssets,confirmCatalog,install,launch,installAndLaunch};
