@@ -132,7 +132,7 @@ test('source-only entries cannot be reported as installable PC packages',()=>{
  assert.equal(state.sourceCatalogEntries,3);
  assert.equal(state.availablePackages,0);
  assert.equal(state.installed,0);
- assert.match(TEMPLATE,/SOURCE DESCRIPTOR - NOT INSTALLABLE/);
+ assert.match(TEMPLATE,/SOURCE ONLY - NOT INSTALLABLE/);
  assert.throws(()=>parse(reply.replace('packages=0;source=3','packages=1;source=3'),'status'));
 });
 test('stop returns the full clean idle schema, including both catalog counts',()=>{
