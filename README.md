@@ -194,6 +194,25 @@ The report lists the original file's section source offsets, byte lengths, CRC v
 
 The remaining boundary is independent ownership of the original platform-2 addressable native session, native SD FS endpoint, shader/Vulkan rendering context, code mapping and original supervisor lifecycle. None are supplied by merely copying more bytes through Balatro.
 
+### Live Book Reader title resource survey (read-only)
+
+The original native load plan was verified against the actual prepared Book Reader 0.1.0 image on the PC (**6/6 tests passing**): `launcher.iza` was 2,422,612 bytes, original ABI2 native code was 6,664 bytes, CPU staging was 2,291,540 bytes, and the native-data allocation requirement was 16 MiB. This verifies package layout, **not** console execution or permissions.
+
+The next diagnostic identifies which **title-local** filesystem, drawing and thread APIs Balatro exposes without calling an undocumented native loader:
+
+```powershell
+git switch feature/balatro-original-book-reader
+git pull --ff-only
+node --test test/balatro-book-reader-runtime-surface.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/book-reader-runtime-surface.cjs 192.168.1.232
+```
+
+With Balatro running and its RPC listener active, this makes **one** fixed read-only Lua request. It checks whether selected `love.filesystem`, `love.graphics` and `love.thread` functions exist; optionally uses `love.filesystem.getInfo` on the **fixed title-relative path** `iz2s/modules/book-reader/launcher.iza` and `love.graphics.getDimensions`. It never reads package bytes, enumerates or mounts the SD, writes files, creates images or threads, calls FFI, invokes native services, maps code, or launches anything.
+
+`filesystem.titleVirtualPathObservation` distinguishes `file`, `directory`, `missing`, `unavailable`, `error`, or `other`. A `file` result is **not proof** of console SD access: LÖVE's virtual filesystem may refer only to title-owned storage. `graphics.titleCanvasDimensions` and exported functions likewise do **not prove ownership** of the original Vulkan device/queues/presentation. `threading.titleThreadFunctionExposed` is not evidence of the original IZ2S native supervisor.
+
+All execution and native ownership fields remain false. Native Book Reader can only run after a separately verified owner satisfies the actual original platform-2 session, SD endpoint, Vulkan context, code-mapping and thread-lifecycle contract. Do not use this survey's presence flags as permission to call privileged services.
+
 ## Upstream and licenses
 
 Original project: [byizmysh/IZ2S-Platform](https://github.com/byizmysh/IZ2S-Platform). Upstream installation instructions and packaged releases are maintained there. Balatro Lua entry work draws on [Luminger/balatro-switch-rce](https://github.com/Luminger/balatro-switch-rce).
