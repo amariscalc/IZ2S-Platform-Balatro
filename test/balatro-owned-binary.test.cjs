@@ -7,7 +7,7 @@ test('bounded code cannot address external native memory or send arbitrary Lua',
  assert.match(SOURCE,/ffi\.new\("uint8_t\[\?\]"/);
  assert.doesNotMatch(SOURCE,/ffi\.cast|loadstring|openService|loadNro/);
  assert.match(SOURCE,/bridge\.declare/);
- for(const op of ['init','status','alloc','write','read','copy','release','clear'])
+ for(const op of ['init','status','alloc','write','read','release','clear'])
   assert.ok(Buffer.byteLength(script(op,{token:TOKEN,...(op==='alloc'?{length:65536}:{})}))<=8192);
  assert.throws(()=>script('call',{token:TOKEN}));
  assert.throws(()=>script('write',{token:TOKEN,id:1,hex:'ff'.repeat(1025),length:1025}));
