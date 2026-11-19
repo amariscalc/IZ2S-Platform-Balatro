@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {MODEL,TEMPLATE,script,parse,execute,OPS}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs');
+const {MODEL,TEMPLATE,modelScript,parseModel,script,parse,execute,OPS}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs');
 const ROOT=path.resolve(__dirname,'..');
 test('canonical focus Lua model ports the upstream layout constants and equations',()=>{
  const original=fs.readFileSync(path.join(ROOT,'engines/CivSwitch/launcher/app/shaders/focus-layout.glsl'),'utf8');
@@ -20,12 +20,17 @@ test('canonical focus Lua model ports the upstream layout constants and equation
  assert.match(MODEL,/213\/255/);
  assert.match(TEMPLATE,/NO VERIFIED APPLICATIONS/);
 });
-test('source-composed payload stays within 8192-byte RPC boundary',()=>{
+test('separate model and view payloads both fit inside the 8192-byte Lua RPC boundary',()=>{
+ const model=modelScript();
+ assert.ok(Buffer.byteLength(model)<=8192);
+ assert.ok(model.includes('function M.railY'));
+ assert.equal(parseModel('-> IZ2S_FOCUS_MODEL_V1;state=ready'),undefined);
+ assert.throws(()=>parseModel('-> IZ2S_FOCUS_MODEL_V1;state=blocked'));
  for(const op of OPS){
   const code=script(op);
   assert.ok(Buffer.byteLength(code)<=8192,op);
   assert.ok(!code.includes('__MODEL_SOURCE__'));
-  assert.ok(code.includes('function M.railY'));
+  assert.ok(code.includes('__IZ2S_CANONICAL_FOCUS_MODEL_V1'));
  }
 });
 test('running focus state is a Lua view port, never a native supervisor',()=>{
@@ -79,4 +84,24 @@ test('source draws after protected console callback and does not install a pre-c
  assert.match(TEMPLATE,/local worked,result=pcall\(old,\.\.\.\)/);
  assert.match(TEMPLATE,/app\.consoleCalls=/);
  assert.doesNotMatch(TEMPLATE,/love\.draw=app\.loveDrawHook/);
+});
+
+test('start publishes the Lua model before installing the view and hooks',async()=>{
+ const calls=[];
+ const reply='-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=1;callbacks=0;consolecalls=0;consolefailures=0';
+ const result=await execute('192.168.1.232','start',{},async q=>{
+  calls.push(q.lua);
+  return calls.length===1?'-> IZ2S_FOCUS_MODEL_V1;state=ready':reply;
+ });
+ assert.equal(calls.length,2);
+ assert.equal(calls[0],modelScript());
+ assert.equal(calls[1],script('start'));
+ assert.equal(result.phase,'running');
+ assert.equal(result.installed,0);
+});
+test('canonical picker draws real package-preview names, never fabricated installed apps',()=>{
+ assert.match(TEMPLATE,/ipairs\(app\.catalog\)/);
+ assert.match(TEMPLATE,/p\.name:sub\(1,23\)/);
+ assert.match(TEMPLATE,/app\.model\.selected==i-1/);
+ assert.match(TEMPLATE,/NO VERIFIED PACKAGE SOURCE/);
 });
