@@ -35,6 +35,7 @@ local function draw()
   if app.model.picking then
    g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
    if app.catalog and #app.catalog>0 then
+    g.setColor(C.muted);g.print("PC PREVIEW - NOT INSTALLED",115,354,0,1.2,1.2)
     for i,p in ipairs(app.catalog) do
      local x,y=Model.cardCenter(i-1,app.model.flow)
      if x>280 and x<1870 then
