@@ -7,14 +7,15 @@ test('real loader evidence is sequenced and never grants native privileges',asyn
  const result=await inspect('192.168.1.232',{
   makeBoundary:()=>({status:async()=>{calls.push('boundary');return {titleLuaAvailable:true,nativeRpcAvailable:false};}}),
   surfaceCheck:async()=>{calls.push('surface');return {observationsOnly:true};},
+  readerResourcesCheck:async()=>{calls.push('reader');return {readOnly:true,titleScoped:true};},
   validateCalls:async()=>{calls.push('native');return {functionCallVerified:true,ownedMemoryVerified:true};},
   memcpyCheck:async()=>{calls.push('memcpy');return {copyVerified:true};},
   binaryCheck:async()=>{calls.push('binary');return {phase:'verified',bytes:64};},
  });
- assert.deepEqual(calls,['boundary','surface','native','memcpy','binary']);
+ assert.deepEqual(calls,['boundary','surface','reader','native','memcpy','binary']);
  assert.deepEqual(result.observations,{
   luaRpc:true,nativeGetter:true,ownedMemory:true,nativeMemcpy:true,pcToTitleBinaryRoundtrip:true,
-  loaderSurfaceInventoried:true
+  loaderSurfaceInventoried:true,bookReaderTitleApisInventoried:true
  });
  assert.equal(result.originalBookReaderExecuted,false);
  assert.equal(result.nativeTransportReady,false);
@@ -27,6 +28,7 @@ test('missing Lua endpoint blocks without touching native calls or memory',async
  const out=await inspect('192.168.1.232',{
   makeBoundary:()=>({status:async()=>({titleLuaAvailable:false})}),
   surfaceCheck:async()=>{calls++;},
+  readerResourcesCheck:async()=>{calls++;},
   validateCalls:async()=>{calls++;},
   memcpyCheck:async()=>{calls++;},
   binaryCheck:async()=>{calls++;},
@@ -38,6 +40,7 @@ test('failed userland or bounded binary probe remains non-authorizing',async()=>
  const out=await inspect('192.168.1.232',{
   makeBoundary:()=>({status:async()=>({titleLuaAvailable:true})}),
   surfaceCheck:async()=>({observationsOnly:true}),
+  readerResourcesCheck:async()=>({readOnly:false,titleScoped:true}),
   validateCalls:async()=>{throw Error('Native call rejected')},
   memcpyCheck:async()=>({state:'blocked'}),
   binaryCheck:async()=>({phase:'blocked'}),
@@ -46,4 +49,5 @@ test('failed userland or bounded binary probe remains non-authorizing',async()=>
  assert.equal(out.observations.nativeGetter,false);
  assert.equal(out.observations.pcToTitleBinaryRoundtrip,false);
  assert.equal(out.originalLauncherReady,false);
+ assert.equal(out.observations.bookReaderTitleApisInventoried,false);
 });
