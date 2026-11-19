@@ -34,3 +34,15 @@ test('each command is one bounded Balatro RPC',async()=>{
  }
  assert.equal(count,4);
 });
+
+test('canonical focus delivers armed request from controller without PC dispatch',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const focus=fs.readFileSync(path.join(__dirname,'../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.lua'),'utf8');
+ assert.match(focus,/app\.bookReaderLaunchRequests==s\.armedAt\+1/);
+ assert.match(focus,/not s\.dispatched/);
+ assert.match(focus,/s\.dispatched=true/);
+ assert.match(focus,/s\.input:push\("book-reader:1"\)/);
+ assert.match(focus,/if not ok then s\.phase="send-uncertain"/);
+ const compact=focus.split('\n').map(line=>line.trim()).filter(line=>line&&!line.startsWith('--')).join('\n');
+ assert.ok(Buffer.byteLength(compact)<=8192);
+});
