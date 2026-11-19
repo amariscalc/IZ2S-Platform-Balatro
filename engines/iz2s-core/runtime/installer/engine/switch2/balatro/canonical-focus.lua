@@ -38,14 +38,14 @@ local function draw()
    g.print(d.name,115,410,0,1.6,1.6)
    g.setColor(C.muted);g.print("VERSION  "..d.version,115,485,0,1.2,1.2)
    g.print("ID  "..d.id,115,538,0,1.2,1.2)
-   g.print("SHA256  "..d.sha256:sub(1,32),115,600)
+   g.print((app.catalogKind=="source" and "DESCRIPTOR SHA256  " or "PACKAGE SHA256  ")..d.sha256:sub(1,32),115,600)
    g.print(d.sha256:sub(33),115,634)
-   g.setColor(C.accent);g.print("PC PREVIEW ONLY - NOT INSTALLED",115,735,0,1.25,1.25)
+   g.setColor(C.accent);g.print(app.catalogKind=="source" and "SOURCE DESCRIPTOR - NOT INSTALLABLE" or "PC PREVIEW ONLY - NOT INSTALLED",115,735,0,1.25,1.25)
    g.print("B  BACK TO BROWSE",115,977,0,1.2,1.2)
   elseif app.model.picking then
    g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
    if app.catalog and #app.catalog>0 then
-    g.setColor(C.muted);g.print("PC PREVIEW - NOT INSTALLED",115,354,0,1.2,1.2)
+    g.setColor(C.muted);g.print(app.catalogKind=="source" and "OFFICIAL SOURCE INDEX - NOT INSTALLED" or "PC PREVIEW - NOT INSTALLED",115,354,0,1.2,1.2)
     for i,p in ipairs(app.catalog) do
      local x,y=Model.cardCenter(i-1,app.model.flow)
      if x>280 and x<1870 then
@@ -181,7 +181,7 @@ if OP=="start" then
  if not Model then error("Canonical IZ2S focus model unavailable") end
  if not app and (type(rawget(_G,"__IZ2S_BALATRO_APP_V1"))=="table" or
                  type(rawget(_G,"__IZ2S_BALATRO_LAUNCHER_V1"))=="table") then
-  return "IZ2S_FOCUS_V1;phase=blocked;view=conflict;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0;packages=0"
+  return "IZ2S_FOCUS_V1;phase=blocked;view=conflict;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0;packages=0;source=0"
  end
  if not app then
   app={model=Model.new(0,0),frames=0,inputs=0,errors=0,callbacks=0,consoleCalls=0,consoleFailures=0}
@@ -213,4 +213,5 @@ return "IZ2S_FOCUS_V1;phase=running;view="..(app.detail and "detail" or (app.mod
  ";errors="..tostring(app.errors)..";drawhook="..(hookOk and "1" or "0")..
  ";inputhook="..(inputOk and "1" or "0")..";callbacks="..tostring(app.callbacks)..
  ";consolecalls="..tostring(app.consoleCalls)..";consolefailures="..tostring(app.consoleFailures)..
- ";packages="..tostring(app.catalog and #app.catalog or 0)
+ ";packages="..tostring(app.catalogKind=="pc" and app.catalog and #app.catalog or 0)..
+ ";source="..tostring(app.catalogKind=="source" and app.catalog and #app.catalog or 0)
