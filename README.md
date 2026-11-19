@@ -44,15 +44,12 @@ Requirements: Switch 2 with the existing Balatro Lua RPC listener running on the
 ```powershell
 git switch feature/balatro-orbit-focus-catalog
 git pull --ff-only
-node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
-node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 start
-node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-catalog.cjs 192.168.1.232
-node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-visual-assets.cjs 192.168.1.232 all
-node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
-node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs 192.168.1.232 stop
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs 192.168.1.232 status
 ```
 
-The visual scene is staged automatically by `start`; its source artwork requires Python with Pillow on the PC. Artwork loading is optional and failures leave vector/text fallback rendering in place. Press **A** on ADD to open BROWSE, navigate with **left/right**, press **A** for read-only details and **B** to return. `availablePackages` counts only verified PC package previews; `sourceCatalogEntries` counts source-only descriptors; `installed` remains 0 unless SD apps are independently verified. Both catalog types are non-executable through Balatro. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
+The one-command `canonical-orbit.cjs start` stages the Lua model, original-layout visual scene, source-index catalog and original PNG artwork (when Python/Pillow is available). The command reports image-loading failures while leaving the menu running with vector/text fallback. Use `start-no-art` for a graphics-only session without loading PNGs. Press **A** on ADD to open BROWSE, navigate with **left/right**, press **A** for read-only details and **B** to return. `availablePackages` counts only verified PC package previews; `sourceCatalogEntries` counts source-only descriptors; `installed` remains 0 unless SD apps are independently verified. Both catalog types are non-executable through Balatro. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
 
 To run the Balatro automated regression tests:
 
@@ -69,6 +66,7 @@ node --test test/balatro-*.test.cjs
 | `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs` | Lua model + visual staging, then menu RPC: `start`, `status`, `left`, `right`, `select`, `back`, `stop` |
 | `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-visual-{base,scene}.lua` | Source-derived composition, animated cards, icons, details and fallback presentation |
 | `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-visual-assets.cjs` | Optional read-only transfer of the repository's icon PNGs and CivSwitch type atlas crops |
+| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs` | Single-command boot combining the read-only UI, catalog and original artwork |
 | `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-catalog.cjs` | Validated, read-only IZ2S PC library previews published as browse-only Lua rows |
 | `engines/CivSwitch/launcher/app/shaders/` | Original ORBIT FOCUS layout, colors and navigation reference |
 | `core/console/sd-launcher/` | Original native launcher and bootstrap, not executed from Balatro |
