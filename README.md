@@ -79,6 +79,20 @@ The Balatro native-entry adapter deliberately rejects unsupported native operati
 2. Refine visual fidelity using the upstream shaders after visual measurements on the Switch.
 3. Investigate supported Balatro capabilities independently before offering installation or application launching.
 
+## Original Book Reader: native package preparation
+
+The Balatro menu now has an **independent native-package preparation workflow** for the unchanged original Book Reader 0.1.0. This uses IZ2S's existing `core/console/sd-launcher/reader/prepare.cjs` adapter and `core/console/sd-launcher/package.cjs` builder; it does **not** turn Book Reader into Lua or execute a native application.
+
+```powershell
+node --test test/balatro-original-book-reader.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-reader.cjs inspect
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-reader.cjs prepare
+```
+
+`inspect` verifies the original module, pinned GPU files, native ABI2 reader controller and its source hashes. `prepare` builds and reads back `launcher.iza` and its companion `.izdata` file using the **real native IZ2S build path**, under `data/build-cache/balatro-original-book-reader/book-reader-*/`. The default includes the original built-in welcome book; pass `--include-library` to include previously imported books.
+
+These operations run **only on the PC**. An actual Book Reader launch requires a verified native IZ2S SD launcher and owned filesystem/Vulkan session. The Balatro Lua RPC does not currently provide that environment; no install, thread or native code execution is attempted or reported by this command.
+
 ## Upstream and licenses
 
 Original project: [byizmysh/IZ2S-Platform](https://github.com/byizmysh/IZ2S-Platform). Upstream installation instructions and packaged releases are maintained there. Balatro Lua entry work draws on [Luminger/balatro-switch-rce](https://github.com/Luminger/balatro-switch-rce).
