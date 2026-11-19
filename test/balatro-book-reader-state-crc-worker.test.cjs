@@ -41,3 +41,9 @@ test('successful CRC verified result does not claim native execution',()=>{
  assert.equal(result.originalBookReaderExecuted,false);
  assert.equal(result.ready,false);
 });
+
+test('CRC worker routing is not overwritten by fallback to legacy controller bridge',()=>{
+ const focus=fs.readFileSync(path.join(__dirname,'../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.lua'),'utf8');
+ assert.match(focus,/if not stateCrcMode and not headerMode then s=rawget\(_G,"__IZ2S_BOOK_READER_CONTROLLER_BRIDGE_V1"\) end/);
+ assert.doesNotMatch(focus,/if not headerMode then s=rawget\(_G,"__IZ2S_BOOK_READER_CONTROLLER_BRIDGE_V1"\) end/);
+});
