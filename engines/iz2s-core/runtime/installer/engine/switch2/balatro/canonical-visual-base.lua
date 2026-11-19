@@ -22,7 +22,7 @@ function V.text(g,a,key,x,y,fallback,size,scale)
   local q=V.quads and V.quads[key]
   if not q then
    V.quads=V.quads or {}
-   local ok,result=pcall(g.newQuad,r[1],r[2],r[3],r[4],768,1149)
+   local ok,result=pcall(g.newQuad,r[1],r[2],r[3],r[4],768,1216)
    if ok then q=result;V.quads[key]=q end
   end
   if q then
