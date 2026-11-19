@@ -111,6 +111,20 @@ The handoff verifies the genuine `IZSDAPP1` ABI2 image and the original `sd-bund
 
 Run `node --test test/balatro-original-book-reader-handoff.test.cjs` to validate identity, fail-closed behavior, companion hashes and local staging.
 
+### Balatro title-owned binary transport and live capability evidence
+
+A new scoped RPC transport supports an actual 64-byte PC-to-Balatro-to-PC binary round trip, with byte verification, strictly bounded allocations, session-token isolation and zero-on-release. It is **only** LuaJIT-owned RAM inside the Balatro title, not the original IZ2S native address/IPC transport.
+
+```powershell
+node --test test/balatro-owned-binary.test.cjs test/balatro-native-evidence.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/owned-binary.cjs 192.168.1.232 check
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-evidence.cjs 192.168.1.232
+```
+
+The first probe exercises real, bounded allocation, writes, reads, comparison and release using a fresh random ownership token. The second combines the existing upstream native bridge checks (SDK getter, owned memory, bounded native memcpy) with the binary round-trip. The result distinguishes **observed userland capability** from missing native requirements. It never calls executable mapping, service IPC or the supervisor. Run these tests while Balatro is open and TCP RPC is available; they do not stop the ORBIT FOCUS frontend.
+
+The Book Reader original `launcher.iza` is already built and locally staged. A successful binary round-trip does **not** mean that the 2.4 MB package can execute: the original launcher still requires a separately verified filesystem, graphics, memory, executable mapping and thread ownership contract.
+
 ## Upstream and licenses
 
 Original project: [byizmysh/IZ2S-Platform](https://github.com/byizmysh/IZ2S-Platform). Upstream installation instructions and packaged releases are maintained there. Balatro Lua entry work draws on [Luminger/balatro-switch-rce](https://github.com/Luminger/balatro-switch-rce).
