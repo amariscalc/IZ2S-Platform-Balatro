@@ -2,6 +2,8 @@
 local OP="status"
 local TOKEN="none"
 local ID=0
+local DST_ID=0
+local DST_OFFSET=0
 local OFFSET=0
 local LENGTH=0
 local HEX=""
@@ -48,6 +50,28 @@ local function action()
   end
   return tostring(LENGTH)
  end
+ if OP=="copy" then
+  if LENGTH<1 or LENGTH>1024 or ID==DST_ID then error("bounds") end
+  local src=checked(ID,OFFSET,LENGTH)
+  local dst=checked(DST_ID,DST_OFFSET,LENGTH)
+  local bridge=type(love)=="table" and love.ffi or nil
+  local app=package.loaded["bl.app"]
+  local info=type(app)=="table" and app.info or nil
+  if type(bridge)~="table" or type(bridge.native_ready)~="function" or
+     type(bridge.declare)~="function" then error("native_unavailable") end
+  local preflight,ready=pcall(bridge.native_ready)
+  if not preflight or ready~=true then error("native_unavailable") end
+  if type(info)~="table" or type(info.sdk_base)~="number" or
+     type(info.off)~="table" or type(info.off.memcpy)~="number" then
+    error("native_unavailable")
+  end
+  local declared,copy=pcall(bridge.declare,"void",
+     {"void *","const void *","size_t"},info.sdk_base+info.off.memcpy)
+  if not declared or type(copy)~="function" then error("native_unavailable") end
+  local executed=pcall(copy,dst.data+DST_OFFSET,src.data+OFFSET,LENGTH)
+  if not executed then error("native_call_failed") end
+  return tostring(LENGTH)
+ end
  if OP=="read" then
   if LENGTH>1024 then error("bounds") end
   local b=checked(ID,OFFSET,LENGTH)
@@ -76,7 +100,7 @@ end
 local ok,result=pcall(action)
 if not ok then
  local tag=tostring(result):match("([a-z_]+)$")
- for _,name in ipairs({"stale_handle","bounds","quota","invalid_hex","invalid_operation"}) do
+ for _,name in ipairs({"stale_handle","bounds","quota","invalid_hex","invalid_operation","native_unavailable","native_call_failed"}) do
   if tag==name then return reply("blocked",name) end
  end
  return reply("blocked","operation_failed")

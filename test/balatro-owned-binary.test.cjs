@@ -5,14 +5,18 @@ const {SOURCE,script,parse,create,check}=require('../engines/iz2s-core/runtime/i
 const TOKEN='0123456789abcdef0123456789abcdef';
 test('bounded code cannot address external native memory or send arbitrary Lua',()=>{
  assert.match(SOURCE,/ffi\.new\("uint8_t\[\?\]"/);
- assert.doesNotMatch(SOURCE,/ffi\.cast|love\.ffi|ipc|loadstring|native_ready/);
- for(const op of ['init','status','alloc','write','read','release','clear'])
+ assert.doesNotMatch(SOURCE,/ffi\.cast|loadstring|openService|loadNro/);
+ assert.match(SOURCE,/bridge\.declare/);
+ for(const op of ['init','status','alloc','write','read','copy','release','clear'])
   assert.ok(Buffer.byteLength(script(op,{token:TOKEN,...(op==='alloc'?{length:65536}:{})}))<=8192);
  assert.throws(()=>script('call',{token:TOKEN}));
  assert.throws(()=>script('write',{token:TOKEN,id:1,hex:'ff'.repeat(1025),length:1025}));
  assert.throws(()=>script('read',{token:TOKEN,id:1,length:1025}));
  assert.throws(()=>script('alloc',{token:TOKEN,length:65537}));
  assert.throws(()=>script('status',{token:'x";os.exit()--'}));
+ assert.throws(()=>script('copy',{token:TOKEN,id:1,dstId:1,length:16}));
+ assert.throws(()=>script('copy',{token:TOKEN,id:1,dstId:2,length:1025}));
+ assert.ok(script('copy',{token:TOKEN,id:1,dstId:2,offset:2,dstOffset:4,length:16}).includes('local DST_ID=2'));
 });
 test('result parser keeps exact hex data and rejects contradictory packets',()=>{
  const out=parse('-> IZ2S_BINARY_V1;state=ok;detail=none;value=00ff10','read',3);
@@ -57,4 +61,20 @@ test('session-scoped request token changes between independent ownership instanc
  assert.equal(a.nativeTransportReady,false);
  assert.equal(a.mode,'title-owned-rpc');
  assert.throws(()=>create({host:'192.168.1.232',token:'bad'}));
+});
+
+test('native copy request has immutable session scope and validates native success',()=>{
+ const mock='-> IZ2S_BINARY_V1;state=ok;detail=none;value=32';
+ assert.equal(parse(mock,'copy',32).value,32);
+ assert.throws(()=>parse('-> IZ2S_BINARY_V1;state=ok;detail=none;value=31','copy',32));
+ assert.equal(parse('-> IZ2S_BINARY_V1;state=blocked;detail=native_unavailable;value=0','copy').state,'blocked');
+ assert.equal(parse('-> IZ2S_BINARY_V1;state=blocked;detail=native_call_failed;value=0','copy').state,'blocked');
+ const s=create({host:'192.168.1.232',token:TOKEN,send:async q=>{
+  assert.ok(q.lua.includes('local OP="copy"'));
+  assert.ok(q.lua.includes('local ID=1'));
+  assert.ok(q.lua.includes('local DST_ID=2'));
+  assert.ok(q.lua.includes('local DST_OFFSET=8'));
+  return mock;
+ }});
+ return s.nativeCopy(1,2,0,8,32).then(x=>assert.equal(x.value,32));
 });

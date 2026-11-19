@@ -7,22 +7,25 @@ const path=require('node:path');
 const crypto=require('node:crypto');
 const {request}=require('./rpc.cjs');
 const SOURCE=fs.readFileSync(path.join(__dirname,'owned-binary.lua'),'utf8');
-const OPS=Object.freeze(['init','status','alloc','write','read','release','clear']);
+const OPS=Object.freeze(['init','status','alloc','write','read','copy','release','clear']);
 const SESSION=/^[a-f0-9]{32}$/;
 const MAX_BUFFER=65536,MAX_WRITE=1024,MAX_REPLY=16384;
 const number=(n,max,label)=>{
  if(!Number.isSafeInteger(n)||n<0||n>max)throw Error('Invalid '+label);
  return n;
 };
-function script(op,{token,id=0,offset=0,length=0,hex=''}={}){
+function script(op,{token,id=0,dstId=0,offset=0,dstOffset=0,length=0,hex=''}={}){
  if(!OPS.includes(op))throw Error('Unsupported binary operation');
  if(typeof token!=='string'||!SESSION.test(token))throw Error('Invalid owned session token');
  number(id,65535,'handle');number(offset,MAX_BUFFER,'offset');
+ number(dstId,65535,'destination handle');number(dstOffset,MAX_BUFFER,'destination offset');
  number(length,MAX_BUFFER,'length');
  if(typeof hex!=='string'||(hex&&!/^[0-9a-f]+$/.test(hex))||hex.length>MAX_WRITE*2)
   throw Error('Invalid hexadecimal payload');
  if(op==='write'&&(length>MAX_WRITE||hex.length!==2*length))throw Error('Invalid write size');
  if(op==='read'&&(length>MAX_WRITE||hex))throw Error('Invalid read size');
+ if(op==='copy'&&(length<1||length>MAX_WRITE||hex||id===dstId))throw Error('Invalid scoped native copy');
+ if(op!=='copy'&&(dstId!==0||dstOffset!==0))throw Error('Copy-only destination fields');
  if(op!=='write'&&hex)throw Error('Hex bytes require write');
  if(op==='alloc'&&(length<1||length>MAX_BUFFER))throw Error('Invalid allocation');
  if(['status','release','clear','init'].includes(op)&&(offset!==0||length!==0))
@@ -31,6 +34,8 @@ function script(op,{token,id=0,offset=0,length=0,hex=''}={}){
   ['local OP="status"',`local OP="${op}"`],
   ['local TOKEN="none"',`local TOKEN="${token}"`],
   ['local ID=0',`local ID=${id}`],
+  ['local DST_ID=0',`local DST_ID=${dstId}`],
+  ['local DST_OFFSET=0',`local DST_OFFSET=${dstOffset}`],
   ['local OFFSET=0',`local OFFSET=${offset}`],
   ['local LENGTH=0',`local LENGTH=${length}`],
   ['local HEX=""',`local HEX="${hex}"`],
@@ -50,7 +55,8 @@ function parse(reply,op,length=0){
  if(!m)throw Error('Malformed binary RPC response');
  const [,state,detail,value]=m;
  const blocked=new Set(['in_use','ffi_missing','not_initialized','session_mismatch',
-  'stale_handle','bounds','quota','invalid_hex','invalid_operation','operation_failed']);
+  'stale_handle','bounds','quota','invalid_hex','invalid_operation',
+  'native_unavailable','native_call_failed','operation_failed']);
  if(state==='blocked'){
   if(!blocked.has(detail)||value!=='0')throw Error('Contradictory binary RPC rejection');
   return {backend:'balatro',operation:op,state,detail,nativeTransportReady:false,ready:false};
@@ -64,7 +70,7 @@ function parse(reply,op,length=0){
  if(!/^(0|[1-9][0-9]{0,5})$/.test(value))throw Error('Malformed binary integer');
  const count=Number(value);
  if((op==='init'||op==='clear')&&count!==0||
-   op==='write'&&count!==length||
+   (op==='write'||op==='copy')&&count!==length||
    op==='alloc'&&(count<1||count>65535)||
    op==='status'&&count>131072||
    op==='release'&&count>131072)
@@ -89,6 +95,9 @@ function create({host,port=9026,send=request,token=crypto.randomBytes(16).toStri
    return run('write',{id:handle,offset,length:data.length,hex:data.toString('hex')});
   },
   async read(handle,offset,length){return run('read',{id:handle,offset,length});},
+  async nativeCopy(source,destination,srcOffset,dstOffset,length){
+   return run('copy',{id:source,dstId:destination,offset:srcOffset,dstOffset,length});
+  },
   async release(handle){return run('release',{id:handle});},
   async clear(){return run('clear');},
   mode:'title-owned-rpc',nativeTransportReady:false,
