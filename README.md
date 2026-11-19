@@ -111,6 +111,20 @@ The handoff verifies the genuine `IZSDAPP1` ABI2 image and the original `sd-bund
 
 Run `node --test test/balatro-original-book-reader-handoff.test.cjs` to validate identity, fail-closed behavior, companion hashes and local staging.
 
+### Original native loader interface preflight
+
+Use the fixed, read-only Balatro loader-surface inspection to distinguish **exposed Lua/SDK symbols** from an actual authorized IZ2S native execution session:
+
+```powershell
+node --test test/balatro-native-loader-surface.test.cjs test/balatro-native-evidence.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-loader-surface.cjs 192.168.1.232
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-evidence.cjs 192.168.1.232
+```
+
+`native-loader-surface.cjs` queries only the presence of Balatro's FFI declaration API, known SDK metadata, LÖVE graphics and filesystem wrappers, and potential IZ2S module registrations. It performs no native function calls, memory access or writes. The result is included under `evidence.loaderSurface` in `native-evidence.cjs`.
+
+**The mere presence of a LÖVE filesystem API does not mean SD storage is available; FFI and SDK metadata do not grant native IPC or executable mappings.** Book Reader cannot be executed via the current title-local transport without those verified prerequisites, and `native-rpc-boundary.cjs` deliberately rejects unsupported operations. Do not infer execution from a successful preflight.
+
 ### Switch 2 hardware evidence — 2026-11-19
 
 Verified from the operator's live Balatro RPC session on Switch 2:
