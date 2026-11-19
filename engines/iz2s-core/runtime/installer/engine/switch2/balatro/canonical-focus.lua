@@ -195,7 +195,7 @@ elseif OP=="left" or OP=="right" or OP=="select" or OP=="back" then
  navigate(OP)
 end
 if not app then
- return "IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0"
+ return "IZ2S_FOCUS_V1;phase=idle;view=none;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0;packages=0;source=0"
 end
 local hookOk=false
 local good,console=pcall(require,"bl.console")
