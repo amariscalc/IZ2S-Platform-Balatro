@@ -69,3 +69,50 @@ test('stale prior Book Reader failure does not invalidate fresh launch',async()=
  const result=await api.launch({supervisor,headerCrc:123,checks:2,pause:async()=>{}});
  assert.equal(result.phase,'native-app-running');
 });
+
+test('native owned Book Reader installation, catalog confirmation and actual launch form one sequence',async()=>{
+ const bytes=Buffer.from('original book reader fixture');
+ let visible=false,launched=false,commands=0,released=false;
+ const supervisor={
+  status:async()=>menu({applications:visible?[{id:'book-reader',source:'sd',headerCrc:345}]:[],
+   native_launches:launched?1:0,last_id:launched?'book-reader':'',active:launched?1:0}),
+  holdMenu:async()=>({active:true,release:async({rescan})=>{assert.equal(rescan,true);visible=true;released=true;}}),
+  command:async index=>{assert.equal(index,1);commands++;launched=true;}
+ };
+ const storage={writableMounts:['sd'],filesystem:{},uncertain:false,read(){},openRead(){},openWrite(){}};
+ const r=await api.installAndLaunch('fixture',{supervisor,storage,
+  verifyArtifact:async()=>({phase:'package-verified',id:'book-reader',
+   sourceFormat:'IZSDAPP1 native ABI2',packageFile:'fixture',packageBytes:bytes.length,
+   packageSha256:sha(bytes),companionAssets:[]}),
+  readFile:async()=>bytes,decode:()=>({id:'book-reader',native:true}),
+  installBytes:async()=>({id:'book-reader',readbackVerified:true,
+   sha256:sha(bytes),headerCrc:345,assets:[]}),
+  pause:async()=>{},confirmChecks:2,launchChecks:2});
+ assert.equal(released,true);assert.equal(commands,1);
+ assert.equal(r.phase,'native-app-running');
+ assert.equal(r.executedOnConsole,true);assert.equal(r.ready,true);
+ assert.equal(r.install.readbackVerified,true);assert.equal(r.catalog.nativeCatalogAccepted,true);
+});
+test('native launch orchestration never issues command before catalog acknowledgement',async()=>{
+ const bytes=Buffer.from('fixture');
+ let commands=0;
+ const supervisor={status:async()=>menu(),command:async()=>{commands++;},
+  holdMenu:async()=>({active:true,release:async()=>{}})};
+ const storage={writableMounts:['sd'],filesystem:{},uncertain:false,read(){},openRead(){},openWrite(){}};
+ const r=await api.installAndLaunch('fixture',{supervisor,storage,
+  verifyArtifact:async()=>({phase:'package-verified',id:'book-reader',
+   sourceFormat:'IZSDAPP1 native ABI2',packageFile:'fixture',packageBytes:bytes.length,
+   packageSha256:sha(bytes),companionAssets:[]}),
+  readFile:async()=>bytes,decode:()=>({id:'book-reader',native:true}),
+  installBytes:async()=>({id:'book-reader',readbackVerified:true,sha256:sha(bytes),headerCrc:345,assets:[]}),
+  pause:async()=>{},confirmChecks:2,launchChecks:2});
+ assert.equal(commands,0);assert.equal(r.phase,'native-catalog-pending');
+ assert.equal(r.executedOnConsole,false);assert.equal(r.ready,false);
+});
+test('Balatro-only transport cannot reach native Book Reader orchestrator',async()=>{
+ let called=false;
+ await assert.rejects(api.installAndLaunch('fixture',{
+  supervisor:{status:async()=>menu()},storage:{},
+  verifyArtifact:async()=>{called=true;}}),/Native IZ2S supervisor/);
+ assert.equal(called,false);
+});
