@@ -95,7 +95,16 @@ local function detail(g,a,d)
  g.print(d.sha256:sub(1,32),423,628)
  g.print(d.sha256:sub(33),423,653)
  V.color(g,V.lime);g.print(a.catalogKind=="source" and "SOURCE ONLY - NOT INSTALLABLE" or "PC PREVIEW - NOT INSTALLED",115,811,0,1.2,1.2)
- footer(g,a,"B  BACK")
+ if d.id=="book-reader" then
+  V.color(g,V.lime)
+  g.print("A  REQUEST BOOK READER",115,851,0,1.1,1.1)
+  V.color(g,V.muted)
+  g.print("NATIVE START BLOCKED - NO VERIFIED SUPERVISOR",115,891,0,1,1)
+  g.print("REQUESTS: "..tostring(a.bookReaderLaunchRequests or 0),115,923,0,.9,.9)
+  footer(g,a,"A  REQUEST     B  BACK")
+ else
+  footer(g,a,"B  BACK")
+ end
 end
 local function home(g,a)
  V.color(g,V.ink);g.print("LIBRARY",116,302,0,2,2)
