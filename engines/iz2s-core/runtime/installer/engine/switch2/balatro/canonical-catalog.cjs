@@ -47,6 +47,7 @@ function payload(rows){
   'if type(a)~="table" or type(a.model)~="table" then return "IZ2S_CATALOG_V1;state=blocked;count=0" end',
   'local rows={' +objects.join(',')+'}',
   'a.catalog=rows',
+  'a.detail=nil',
   'a.model.pickerCount=#rows',
   'a.model.selected=0',
   'a.model.flow=0',
