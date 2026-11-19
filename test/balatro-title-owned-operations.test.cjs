@@ -32,3 +32,14 @@ test('sends one hardware request; never retries',async()=>{
  }});
  assert.equal(count,1);assert.equal(r.threading.loveWorkerLifecycle,'unsupported');
 });
+
+test('thread failure returns the precise phase instead of an undifferentiated error',()=>{
+ for(const phase of ['create-error','start-error','wait-error','get-error-error']){
+  const result=parse('-> IZ2S_BALATRO_TITLE_OPS_V1;vfs=verified;worker='+phase);
+  assert.equal(result.threading.loveWorkerLifecycle,phase);
+  assert.equal(result.originalSupervisorThreadVerified,false);
+ }
+ assert.match(LUA,/origin="start"/);
+ assert.match(LUA,/origin="wait"/);
+ assert.match(LUA,/origin="get-error"/);
+});
