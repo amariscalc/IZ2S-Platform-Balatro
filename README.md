@@ -29,8 +29,8 @@ BROWSE first reads verified PC package previews through IZ2S's existing reposito
 | Verified PC package preview in BROWSE | **Implemented**; real PC inventory observed empty on Switch test (0 entries) |
 | Official-version-matched local source descriptor fallback | **Verified visually on Switch 2:** six real metadata entries displayed; never installable |
 | Read-only catalog details | **Verified visually on Switch 2** for BlitBun 1.15.8; returning with B not independently documented |
-| Animated orbital scene, hero panel and transitions | **Implemented**; new renderer pending Switch hardware verification |
-| Original CivSwitch type crops and six application icons | **Read-only PNG conversion and bounded Lua upload implemented**; GPU presentation pending Switch verification |
+| Animated orbital scene, hero panel and transitions | **Verified on Switch 2**; compact BROWSE layout fix pending visual confirmation |
+| Original CivSwitch type crops and six application icons | **Standard-library PNG conversion, bounded upload implemented**; icon rendering pending Switch verification |
 | Installed SD app catalog, original icons and artwork | **Not connected** |
 | Application installation and native execution from Balatro | **Not implemented** |
 | Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
@@ -49,7 +49,7 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs 192.168.1.232 status
 ```
 
-The one-command `canonical-orbit.cjs start` stages the Lua model, original-layout visual scene, source-index catalog and original PNG artwork (when Python/Pillow is available). Visual-stage errors are reported under `visualStages` and do not prevent the proven text-only menu fallback from starting. The command reports image-loading failures while leaving the menu running with vector/text fallback. Use `start-no-art` for a graphics-only session without loading PNGs. Press **A** on ADD to open BROWSE, navigate with **left/right**, press **A** for read-only details and **B** to return. `availablePackages` counts only verified PC package previews; `sourceCatalogEntries` counts source-only descriptors; `installed` remains 0 unless SD apps are independently verified. Both catalog types are non-executable through Balatro. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
+The one-command `canonical-orbit.cjs start` stages the Lua model, original-layout visual scene, source-index catalog and original PNG artwork using Python 3 without third-party imaging packages. Visual-stage errors are reported under `visualStages` and do not prevent the proven text-only menu fallback from starting. The command reports image-loading failures while leaving the menu running with vector/text fallback. Use `start-no-art` for a graphics-only session without loading PNGs. Press **A** on ADD to open BROWSE, navigate with **left/right**, press **A** for read-only details and **B** to return. `availablePackages` counts only verified PC package previews; `sourceCatalogEntries` counts source-only descriptors; `installed` remains 0 unless SD apps are independently verified. Both catalog types are non-executable through Balatro. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
 
 To run the Balatro automated regression tests:
 
@@ -75,7 +75,7 @@ The Balatro native-entry adapter deliberately rejects unsupported native operati
 
 ## Next priorities
 
-1. Verify the newly staged animation and icon/type sprite rendering on actual Switch 2 hardware without compromising the previously verified text fallback.
+1. Verify all six original icons and source-atlas typography on Switch 2 and confirm the revised BROWSE panel no longer overlaps the heading or card row.
 2. Refine visual fidelity using the upstream shaders after visual measurements on the Switch.
 3. Investigate supported Balatro capabilities independently before offering installation or application launching.
 
