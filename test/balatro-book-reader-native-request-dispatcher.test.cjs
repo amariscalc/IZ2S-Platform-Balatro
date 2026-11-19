@@ -49,3 +49,24 @@ test('native error is latched and never automatically retried',async()=>{
  assert.equal(r.phase,'failed');assert.equal(r.executionUnverified,true);
  assert.equal((await d.poll()).phase,'failed');assert.equal(f.calls,1);
 });
+
+test('parallel polls cannot execute the same native request twice',async()=>{
+ let inspectCall=0,launches=0;
+ const pending=[];
+ const args={host:'192.168.1.232',packageFile:'launcher.iza',expectedSha256:sha,
+  supervisor:{},storage:{},assertOwned:()=>{},
+  inspect:async()=>{
+   inspectCall++;
+   if(inspectCall===1)return request(5);
+   return new Promise(resolve=>pending.push(resolve));
+  },
+  launch:async()=>{launches++;return {phase:'native-app-running',executedOnConsole:true,ready:true};}
+ };
+ const d=await create(args);
+ const a=d.poll(),b=d.poll();
+ assert.equal(pending.length,1,'only one in-flight console observation');
+ pending[0](request(6));
+ const [r1,r2]=await Promise.all([a,b]);
+ assert.equal(r1.phase,'completed');assert.equal(r2.phase,'completed');
+ assert.equal(launches,1);
+});
