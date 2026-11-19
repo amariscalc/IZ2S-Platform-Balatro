@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {MODEL,TEMPLATE,modelScript,parseModel,script,parse,execute,OPS}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs');
+const {MODEL,TEMPLATE,VISUAL_BASE,VISUAL_SCENE,modelScript,parseModel,visualScript,parseVisual,script,parse,execute,OPS}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs');
 const ROOT=path.resolve(__dirname,'..');
 test('canonical focus Lua model ports the upstream layout constants and equations',()=>{
  const original=fs.readFileSync(path.join(ROOT,'engines/CivSwitch/launcher/app/shaders/focus-layout.glsl'),'utf8');
@@ -86,16 +86,21 @@ test('source draws after protected console callback and does not install a pre-c
  assert.doesNotMatch(TEMPLATE,/love\.draw=app\.loveDrawHook/);
 });
 
-test('start publishes the Lua model before installing the view and hooks',async()=>{
+test('start stages model, original visual primitives and animated scene before menu hooks',async()=>{
  const calls=[];
  const reply='-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=1;callbacks=0;consolecalls=0;consolefailures=0;packages=0;source=0';
  const result=await execute('192.168.1.232','start',{},async q=>{
   calls.push(q.lua);
-  return calls.length===1?'-> IZ2S_FOCUS_MODEL_V1;state=ready':reply;
+  if(calls.length===1)return '-> IZ2S_FOCUS_MODEL_V1;state=ready';
+  if(calls.length===2)return '-> IZ2S_VISUAL_V1;stage=base;ok=1';
+  if(calls.length===3)return '-> IZ2S_VISUAL_V1;stage=scene;ok=1';
+  return reply;
  });
- assert.equal(calls.length,2);
+ assert.equal(calls.length,4);
  assert.equal(calls[0],modelScript());
- assert.equal(calls[1],script('start'));
+ assert.equal(calls[1],visualScript('base'));
+ assert.equal(calls[2],visualScript('scene'));
+ assert.equal(calls[3],script('start'));
  assert.equal(result.phase,'running');
  assert.equal(result.installed,0);
 });
@@ -140,4 +145,15 @@ test('stop returns the full clean idle schema, including both catalog counts',()
  assert.equal(state.phase,'idle');
  assert.equal(state.availablePackages,0);
  assert.equal(state.sourceCatalogEntries,0);
+});
+
+test('source-backed CivSwitch scene obeys 8 KiB RPC ceiling and preserves Lua fallback',()=>{
+ for(const stage of ['base','scene'])assert.ok(Buffer.byteLength(visualScript(stage))<=8192);
+ assert.match(VISUAL_BASE,/__IZ2S_FOCUS_VISUAL_V1/);
+ assert.match(VISUAL_SCENE,/__IZ2S_FOCUS_SCENE_V1/);
+ assert.match(VISUAL_SCENE,/SOURCE DESCRIPTOR SHA256/);
+ assert.match(VISUAL_SCENE,/V\.icon\(g,a,p\.id/);
+ assert.match(TEMPLATE,/if type\(scene\)=="function"/);
+ assert.throws(()=>visualScript('unknown'));
+ assert.throws(()=>parseVisual('-> IZ2S_VISUAL_V1;stage=scene;ok=0','scene'));
 });
