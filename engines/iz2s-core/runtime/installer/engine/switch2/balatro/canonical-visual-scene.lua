@@ -19,7 +19,8 @@ local function orbit(g,t)
  end
  V.color(g,V.ink,.25)
  for i=0,80 do
-  local x=120+i*20,y=M.railY(x)
+  local x=120+i*20
+  local y=M.railY(x)
   if y<1070 then circle(g,x,y,1.4) end
  end
  glow(g,1854,413,19,V.ink,.025)
