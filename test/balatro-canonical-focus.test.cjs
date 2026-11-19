@@ -174,3 +174,8 @@ test('a malformed visual stage cannot stop the previously verified fallback view
  assert.equal(state.visualStages[1].loaded,false);
  assert.match(state.visualStages[1].error,/bad scene/);
 });
+
+test('ORBIT scene rail point uses valid Lua local declaration syntax',()=>{
+ assert.match(VISUAL_SCENE,/local x=120\+i\*20\s+local y=M\.railY\(x\)/);
+ assert.doesNotMatch(VISUAL_SCENE,/local x=120\+i\*20,y=/);
+});
