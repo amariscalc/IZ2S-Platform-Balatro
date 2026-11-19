@@ -40,8 +40,8 @@ local function draw()
    g.print("ID  "..d.id,115,538,0,1.2,1.2)
    g.print((app.catalogKind=="source" and "SOURCE SHA256  " or "PACKAGE SHA256  ")..d.sha256:sub(1,32),115,600)
    g.print(d.sha256:sub(33),115,634)
-   g.setColor(C.accent);g.print(app.catalogKind=="source" and "SOURCE ONLY - NOT INSTALLABLE" or "PC PREVIEW ONLY - NOT INSTALLED",115,735,0,1.25,1.25)
-   g.print("B  BACK TO BROWSE",115,977,0,1.2,1.2)
+   g.setColor(C.accent);g.print(app.catalogKind=="source" and "SOURCE ONLY - NOT INSTALLABLE" or "PC PREVIEW - NOT INSTALLED",115,735,0,1.25,1.25)
+   g.print("B  BACK",115,977,0,1.2,1.2)
   elseif app.model.picking then
    g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
    if app.catalog and #app.catalog>0 then
@@ -85,7 +85,7 @@ local function draw()
    g.setColor(C.muted);g.print("LEFT / RIGHT  SELECT     A  OPEN",110,1008,0,1.25,1.25)
   end
   g.setColor(C.muted)
-  g.print("IZ2S LUA PORT - NATIVE OFFLINE",955,1015,0,1.0,1.0)
+  g.print("IZ2S LUA - NATIVE OFFLINE",955,1015,0,1.0,1.0)
   if app.model.notice then g.setColor(C.accent);g.print(app.model.notice,115,895,0,1.2,1.2) end
  end)
  pcall(g.pop)
