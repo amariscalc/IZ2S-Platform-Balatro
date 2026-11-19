@@ -59,16 +59,44 @@ const luaStatus=[
  's.received=1',
  'return "IZ2S_MAILBOX_V1;phase=verified"'
 ].join('\n');
-const SCRIPTS=Object.freeze({start:luaStart,send:luaCommand,status:luaStatus});
+// The currently running worker already accepts checksum:2. Extend its
+// controller without replacing or restarting the retained title worker.
+const luaChecksum=[
+ 'local s=rawget(_G,"__IZ2S_BOOK_READER_MAILBOX_V1")',
+ 'if type(s)~="table" or s.phase~="started" then return "IZ2S_MAILBOX_V1;phase=not-started" end',
+ 'if s.received~=1 then return "IZ2S_MAILBOX_V1;phase=ping-not-verified" end',
+ 'if s.checksumSent then return "IZ2S_MAILBOX_V1;phase=checksum-already-sent" end',
+ 's.checksumSent=true',
+ 'local ok=pcall(function() s.inbox:push("checksum:2") end)',
+ 'if not ok then return "IZ2S_MAILBOX_V1;phase=checksum-send-error" end',
+ 'return "IZ2S_MAILBOX_V1;phase=checksum-sent"'
+].join('\\n');
+const luaChecksumStatus=[
+ 'local s=rawget(_G,"__IZ2S_BOOK_READER_MAILBOX_V1")',
+ 'if type(s)~="table" or s.phase~="started" then return "IZ2S_MAILBOX_V1;phase=not-started" end',
+ 'if s.checksumReceived then return "IZ2S_MAILBOX_V1;phase=checksum-verified" end',
+ 'if not s.checksumSent then return "IZ2S_MAILBOX_V1;phase=checksum-not-sent" end',
+ 'local ok,msg=pcall(function() return s.outbox:pop() end)',
+ 'if not ok then return "IZ2S_MAILBOX_V1;phase=checksum-receive-error" end',
+ 'if msg==nil then return "IZ2S_MAILBOX_V1;phase=checksum-pending" end',
+ 'if msg~="checksum:2:42" then return "IZ2S_MAILBOX_V1;phase=checksum-mismatch" end',
+ 's.checksumReceived=true',
+ 'return "IZ2S_MAILBOX_V1;phase=checksum-verified"'
+].join('\\n');
+const SCRIPTS=Object.freeze({start:luaStart,send:luaCommand,status:luaStatus,
+ checksum:luaChecksum,checksumStatus:luaChecksumStatus});
 const PHASES=new Set(['already-started','unsupported','channels-error','filedata-error','create-error','start-error',
  'started','not-started','command-already-sent','sent','send-error','waiting-command','pending','receive-error',
- 'unexpected-response','verified']);
+ 'unexpected-response','verified','ping-not-verified','checksum-already-sent',
+ 'checksum-send-error','checksum-sent','checksum-not-sent','checksum-receive-error',
+ 'checksum-pending','checksum-mismatch','checksum-verified']);
 function parse(reply){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Invalid mailbox RPC framing');
  const m=/^IZ2S_MAILBOX_V1;phase=([a-z-]+)$/.exec(reply.slice(3).trim());
  if(!m||!PHASES.has(m[1]))throw Error('Malformed mailbox response');
  return {backend:'balatro',mode:'persistent-title-worker-mailbox',phase:m[1],
   commandRoundtripVerified:m[1]==='verified',
+  secondCommandRoundtripVerified:m[1]==='checksum-verified',
   workerReferencesRetained:true,workerJoined:false,
   nativeTransportReady:false,nativeSupervisorRunning:false,ready:false};
 }
@@ -80,7 +108,7 @@ async function inspect(host,op,{port=9026,send=request}={}){
 }
 async function main(){
  const [host,op]=process.argv.slice(2);
- if(!host||!op){console.error('Usage: node title-worker-mailbox.cjs <switch-ip> start|send|status');process.exitCode=2;return;}
+ if(!host||!op){console.error('Usage: node title-worker-mailbox.cjs <switch-ip> start|send|status|checksum|checksumStatus');process.exitCode=2;return;}
  try{console.log(JSON.stringify(await inspect(host,op),null,2));}
  catch(e){console.error(JSON.stringify({phase:'error',ready:false,error:e.message}));process.exitCode=1;}
 }
