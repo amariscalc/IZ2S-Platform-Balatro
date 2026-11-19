@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {validate,readCatalog,payload,parse,publish}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-catalog.cjs');
+const {validate,sourceIndex,readCatalog,payload,parse,publish}=require('../engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-catalog.cjs');
 const HASH='a'.repeat(64);
 const realPreview={id:'sample-preview',name:'Example App',version:'1.0',sha256:HASH};
 test('only source-backed, unique validated package preview records are allowed',()=>{
@@ -62,4 +62,28 @@ test('publish sends only validated PC preview, not a fabricated SD catalog',asyn
  assert.equal(result.installedPackagesVerified,false);
  assert.equal(result.nativeApplicationLaunchAvailable,false);
  assert.equal(result.ready,false);
+});
+
+test('empty PC inventory falls back to authentic source descriptors with separate identity',async()=>{
+ const x=await readCatalog({root:'/tmp/iz2s-fixture',createRepository:async()=>({
+  list:async()=>({packages:[]}),
+  previewApps:async()=>({packages:[],rejected:[]}),
+ }),readSourceIndex:async()=>({packages:[realPreview],rejected:0})});
+ assert.equal(x.kind,'source-descriptor');
+ assert.equal(x.source,'iz2s-official-source-index');
+ assert.equal(x.available,0);
+ assert.equal(x.sourceEntries,1);
+ assert.match(payload(x.packages,x.kind),/a.catalogKind="source"/);
+});
+test('source fallback does not become installable in published RPC status',async()=>{
+ const x=await publish('192.168.1.232',{
+  root:'/tmp/iz2s-fixture',
+  createRepository:async()=>({list:async()=>({packages:[]}),previewApps:async()=>({packages:[],rejected:[]})}),
+  readSourceIndex:async()=>({packages:[realPreview],rejected:0}),
+  send:async()=> '-> IZ2S_CATALOG_V1;state=loaded;count=1',
+ });
+ assert.equal(x.availablePackages,0);
+ assert.equal(x.sourceCatalogEntries,1);
+ assert.equal(x.catalogEntries,1);
+ assert.equal(x.nativeApplicationLaunchAvailable,false);
 });
