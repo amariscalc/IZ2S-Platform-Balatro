@@ -41,3 +41,19 @@ test('malformed or inconsistent selection is rejected',()=>{
  for(const r of ['bad',reply('detail','none','source'),reply('idle','book-reader','source'),
   reply('detail','book-reader','none')])assert.throws(()=>parse(r));
 });
+
+test('real controller A on Book Reader detail is an observable non-native launch request',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const root=path.resolve(__dirname,'../engines/iz2s-core/runtime/installer/engine/switch2/balatro');
+ const focus=fs.readFileSync(path.join(root,'canonical-focus.lua'),'utf8');
+ const scene=fs.readFileSync(path.join(root,'canonical-visual-scene.lua'),'utf8');
+ assert.match(focus,/app\.detail\.id=="book-reader"/);
+ assert.match(focus,/app\.bookReaderLaunchRequests=math\.min/);
+ assert.match(focus,/NATIVE LAUNCH NOT AVAILABLE/);
+ assert.match(scene,/A  REQUEST BOOK READER/);
+ assert.match(scene,/NATIVE START BLOCKED/);
+ const observed=parse(reply('detail','book-reader','source')+';requests=1');
+ assert.equal(observed.launchRequests,1);
+ assert.equal(observed.bookReaderSelected,true);
+ assert.throws(()=>parse(reply('detail','book-reader','source')+';requests=1000000000'));
+});
