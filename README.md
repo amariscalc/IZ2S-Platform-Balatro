@@ -177,6 +177,23 @@ A successful result reports `phase: "original-bytes-verified-in-title"`, `identi
 
 The Book Reader original `launcher.iza` is already built and locally staged. A successful binary round-trip does **not** mean that the 2.4 MB package can execute: the original launcher still requires a separately verified filesystem, graphics, memory, executable mapping and thread ownership contract.
 
+### Original Book Reader native load-plan audit
+
+The original C supervisor at `core/console/sd-launcher/native/launcher.c` does **not** load the entire `launcher.iza` into a Lua buffer. It verifies the SD header; stages small code/shader/control sections in CPU memory; sends the private image prefix directly to a coherent GPU allocation; initializes its pipeline and input; and only then invokes the original native ABI2 application via its retained supervisor. A title-local `memcpy` verification cannot replace this loader.
+
+The Balatro branch now has an **offline**, fail-closed audit of the unchanged original Book Reader package using the existing verified `launcher.iza`, companion identity checks and canonical section/CRC/SPIR-V decoder:
+
+```powershell
+$reader = "data/build-cache/balatro-original-book-reader/book-reader-20BvuW/launcher.iza"
+$sha = "7f205e66829bd8788d68dfd6f4c2e8a6f640cb20e3a53ef021dbc5a1a37747e6"
+node --test test/balatro-original-book-reader-load-plan.test.cjs
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-reader-load-plan.cjs $reader $sha
+```
+
+The report lists the original file's section source offsets, byte lengths, CRC values, CPU staging offsets, GPU-private allocation and initial prefix, native data allocation, companion asset hashes and exact missing entry prerequisites. `phase: package-layout-verified-native-entry-blocked` means **package layout was validated on the PC**, not that any console filesystem or native mapping was obtained. This audit sends **no RPC** and does not install, map, allocate Switch memory, start threads or execute the reader.
+
+The remaining boundary is independent ownership of the original platform-2 addressable native session, native SD FS endpoint, shader/Vulkan rendering context, code mapping and original supervisor lifecycle. None are supplied by merely copying more bytes through Balatro.
+
 ## Upstream and licenses
 
 Original project: [byizmysh/IZ2S-Platform](https://github.com/byizmysh/IZ2S-Platform). Upstream installation instructions and packaged releases are maintained there. Balatro Lua entry work draws on [Luminger/balatro-switch-rce](https://github.com/Luminger/balatro-switch-rce).
