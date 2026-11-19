@@ -23,6 +23,8 @@ async function launch(host,{port=9026,images=true,focusExecute=focus.execute,
  }
  const status=await focusExecute(host,'status',options);
  return {backend:'balatro',mode:'canonical-orbit-visual',phase:status.phase,
+  visualStages:started.visualStages||[],
+  visualFallback:(started.visualStages||[]).some(x=>!x.loaded),
   view:status.view,drawErrors:status.drawErrors,
   availablePackages:status.availablePackages,
   sourceCatalogEntries:status.sourceCatalogEntries,
