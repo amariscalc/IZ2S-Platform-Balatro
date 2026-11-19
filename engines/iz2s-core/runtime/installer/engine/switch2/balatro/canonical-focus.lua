@@ -62,14 +62,17 @@ local function navigate(action)
   elseif action=="select" and app.detail.id=="book-reader" then
    app.bookReaderLaunchRequests=math.min(999999999,(app.bookReaderLaunchRequests or 0)+1)
    -- Deliver exactly one armed Book Reader request directly to the retained title worker.
-   local s=rawget(_G,"__IZ2S_BOOK_READER_HEADER_WORKER_V1")
-   local headerMode=type(s)=="table"
+   local s=rawget(_G,"__IZ2S_BOOK_READER_STATE_CRC_WORKER_V1")
+   local stateCrcMode=type(s)=="table"
+   if not stateCrcMode then s=rawget(_G,"__IZ2S_BOOK_READER_HEADER_WORKER_V1") end
+   local headerMode=type(s)=="table" and not stateCrcMode
    if not headerMode then s=rawget(_G,"__IZ2S_BOOK_READER_CONTROLLER_BRIDGE_V1") end
    if type(s)=="table" and s.phase=="started" and s.armedAt>=0 and not s.dispatched and
       app.bookReaderLaunchRequests==s.armedAt+1 then
     s.dispatched=true
     local ok=pcall(function()
-     if headerMode then s.input:push("header:"..s.header)
+     if stateCrcMode then s.input:push("header:"..s.header..":"..s.stateHex)
+     elseif headerMode then s.input:push("header:"..s.header)
      else s.input:push("book-reader:1") end
     end)
     if not ok then s.phase="send-uncertain" end
