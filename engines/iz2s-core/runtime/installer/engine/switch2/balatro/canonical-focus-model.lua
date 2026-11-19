@@ -55,7 +55,7 @@ end
 function M.select(state)
  if state.picking then
   if state.pickerCount==0 then return "empty-picker" end
-  return "install-unavailable"
+  return "preview-detail"
  end
  if state.selected==0 or state.installed==0 then
   state.picking=true;state.selected=0;state.flow=0
