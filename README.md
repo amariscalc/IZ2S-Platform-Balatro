@@ -14,7 +14,7 @@ The upstream **SmileBASIC** and **Civilization VII** entry methods remain separa
 - The same session reported **9,401 rendered frames**, **9,401 draw callbacks**, **0 draw errors** and **0 console draw failures**.
 - The original native launcher binary and its manifest-listed sources pass offline integrity checks. **This does not mean the binary has executed.**
 
-The current branch adds a **read-only PC package preview** from the existing IZ2S repository validation path. BROWSE can display genuine available package names and versions after publication; selecting a package opens a read-only details page with its ID and SHA-256. This integration **has not yet been confirmed on the physical Switch**; until publication, the picker shows `NO VERIFIED PACKAGE SOURCE`. It is not an installed-app/SD inventory. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
+BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. This expanded catalog still requires physical Switch confirmation and does not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
 
 ### Verified and unverified features
 
@@ -26,7 +26,9 @@ The current branch adds a **read-only PC package preview** from the existing IZ2
 | Controller input and HOME → BROWSE navigation | **Verified on Switch 2**; new package-details navigation pending hardware verification |
 | Draw callbacks and rendering | **Verified:** 9,401 frames; 0 draw errors in the recorded session |
 | Original native launcher and source integrity | **Verified offline**; never executed by Balatro |
-| Real PC package preview and read-only package details in BROWSE | **Implemented on this branch**; hardware verification pending |
+| Verified PC package preview in BROWSE | **Implemented**; real PC inventory observed empty on Switch test (0 entries) |
+| Official-version-matched local source descriptor fallback | **Implemented**; hardware verification pending, never installable |
+| Read-only catalog details | **Implemented**; hardware verification pending |
 | Installed SD app catalog, original icons and artwork | **Not connected** |
 | Application installation and native execution from Balatro | **Not implemented** |
 | Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
@@ -47,7 +49,7 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
 ```
 
-Press **A** on ADD to open BROWSE; choose a real PC package using **left/right**, press **A** for its read-only details, and **B** to return. The `availablePackages` status field reports how many previews are loaded; `installed` remains 0 unless installed SD apps are independently verified. Use **B** again to return home. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
+Press **A** on ADD to open BROWSE, navigate with **left/right**, press **A** for read-only details and **B** to return. `availablePackages` counts only verified PC package previews; `sourceCatalogEntries` counts source-only descriptors; `installed` remains 0 unless SD apps are independently verified. Both catalog types are non-executable through Balatro. Do not run the older Lua diagnostic overlay in parallel. The view is title-local: it is lost when Balatro exits. The RPC service is not encrypted or authenticated; do not expose port 9026 to the internet.
 
 To run the Balatro automated regression tests:
 
@@ -70,7 +72,7 @@ The Balatro native-entry adapter deliberately rejects unsupported native operati
 
 ## Next priorities
 
-1. Confirm the PC preview catalog appears in BROWSE on physical hardware; keep it distinct from installed SD applications.
+1. Confirm the source-only fallback appears in BROWSE on physical hardware and remains distinct from verified PC packages and installed SD applications.
 2. Reuse the original font atlas, artwork, transitions and layout details to improve visual fidelity.
 3. Investigate supported Balatro capabilities independently before offering installation or application launching.
 
