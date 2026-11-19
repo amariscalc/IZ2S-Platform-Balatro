@@ -37,10 +37,9 @@ function spritePayload(sprite){
   'end',
  ];
  const source=[...prefix,...pixels,
-  'local im=l.graphics.newImage(d)',
-  'if im.setFilter then im:setFilter("linear","linear") end',
-  'a.images=a.images or {}',
-  'a.images['+key+']=im',
+  'a.sprites=a.sprites or {}',
+  'a.sprites['+key+']=d',
+  'if a.images then a.images['+key+']=nil end',
   'end)',
   'return "IZ2S_ASSET_V1;state="..(ok and "loaded" or "skipped")',
  ].join('\n');
