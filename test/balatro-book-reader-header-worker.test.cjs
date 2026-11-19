@@ -32,3 +32,17 @@ test('stage demands verified header data and bounds RPC',async()=>{
  assert.equal(result.phase,'header-staged');
  assert.equal(result.ready,false);
 });
+
+test('worker validates 12 ABI2 ranges, alignment and overlap without executable mapping',()=>{
+ const script=api.SCRIPTS.start;
+ assert.match(script,/for i=0,11 do/);
+ assert.match(script,/pos=177\+i\*16/);
+ assert.match(script,/off>=ends and off%4==0/);
+ assert.match(script,/len<=total-off/);
+ assert.match(script,/reserved==0/);
+ assert.match(script,/lengths\[1\]==1024/);
+ assert.match(script,/lengths\[9\]==131072/);
+ assert.match(script,/lengths\[11\]>=4/);
+ assert.match(script,/lengths\[12\]<=nativeDataBytes/);
+ assert.doesNotMatch(script,/worker:wait|worker:release|ro:dmnt|loadstring|ffi|mapCode/);
+});
