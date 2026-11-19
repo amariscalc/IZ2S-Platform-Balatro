@@ -211,6 +211,8 @@ With Balatro running and its RPC listener active, this makes **one** fixed read-
 
 `filesystem.titleVirtualPathObservation` distinguishes `file`, `directory`, `missing`, `unavailable`, `error`, or `other`. A `file` result is **not proof** of console SD access: LÖVE's virtual filesystem may refer only to title-owned storage. `graphics.titleCanvasDimensions` and exported functions likewise do **not prove ownership** of the original Vulkan device/queues/presentation. `threading.titleThreadFunctionExposed` is not evidence of the original IZ2S native supervisor.
 
+The same inventory is now included under `evidence.bookReaderResources` when running `native-evidence.cjs`; its observation is recorded separately as `observations.bookReaderTitleApisInventoried`, never as native ownership. Run `node --test test/balatro-native-evidence.test.cjs test/balatro-book-reader-runtime-surface.test.cjs` to validate both paths.
+
 All execution and native ownership fields remain false. Native Book Reader can only run after a separately verified owner satisfies the actual original platform-2 session, SD endpoint, Vulkan context, code-mapping and thread-lifecycle contract. Do not use this survey's presence flags as permission to call privileged services.
 
 ## Upstream and licenses
