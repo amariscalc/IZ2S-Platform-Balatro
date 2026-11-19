@@ -34,8 +34,10 @@ function visualScript(stage){
  return withinLimit(compact(stage==='base'?VISUAL_BASE:VISUAL_SCENE));
 }
 function parseVisual(reply,stage){
- if(typeof reply!=='string'||reply.trim()!=='-> IZ2S_VISUAL_V1;stage='+stage+';ok=1')
-  throw Error('ORBIT FOCUS '+stage+' visual stage could not initialize');
+ const expected='-> IZ2S_VISUAL_V1;stage='+stage+';ok=1';
+ if(typeof reply==='string'&&reply.trim()===expected)return {stage,loaded:true};
+ const sample=String(reply).slice(0,420).replace(/[\r\n\t]+/g,' ');
+ return {stage,loaded:false,error:sample||'No visual RPC response'};
 }
 function parseModel(reply){
  if(typeof reply!=='string'||reply.trim()!=='-> IZ2S_FOCUS_MODEL_V1;state=ready')
@@ -68,12 +70,20 @@ function parse(reply,op){
 }
 async function execute(host,op,options={},send=request){
  const transport={host,port:9026,timeoutMs:5000,...options};
+ let visualStages;
  if(op==='start'){
   parseModel(await send({...transport,lua:modelScript()}));
-  for(const stage of ['base','scene'])
-   parseVisual(await send({...transport,lua:visualScript(stage)}),stage);
+  visualStages=[];
+  for(const stage of ['base','scene']){
+   let outcome;
+   try{outcome=parseVisual(await send({...transport,lua:visualScript(stage)}),stage);}
+   catch(error){outcome={stage,loaded:false,error:String(error.message||error).slice(0,420)};}
+   visualStages.push(outcome);
+  }
  }
- return parse(await send({...transport,lua:script(op)}),op);
+ const state=parse(await send({...transport,lua:script(op)}),op);
+ if(visualStages)state.visualStages=visualStages;
+ return state;
 }
 async function main(){
  const [host,op='status',portArg]=process.argv.slice(2);
