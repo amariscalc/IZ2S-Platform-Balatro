@@ -14,7 +14,7 @@ The upstream **SmileBASIC** and **Civilization VII** entry methods remain separa
 - The same session reported **9,401 rendered frames**, **9,401 draw callbacks**, **0 draw errors** and **0 console draw failures**.
 - The original native launcher binary and its manifest-listed sources pass offline integrity checks. **This does not mean the binary has executed.**
 
-The current view has **no verified application or package catalog**, so BROWSE displays `NO VERIFIED PACKAGE SOURCE`. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
+The current branch adds a **read-only PC package preview** from the existing IZ2S repository validation path. BROWSE can display genuine available package names and versions after publication. This integration **has not yet been confirmed on the physical Switch**; until publication, the picker shows `NO VERIFIED PACKAGE SOURCE`. It is not an installed-app/SD inventory. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
 
 ### Verified and unverified features
 
@@ -26,7 +26,8 @@ The current view has **no verified application or package catalog**, so BROWSE d
 | Controller input and HOME → BROWSE navigation | **Verified on Switch 2** |
 | Draw callbacks and rendering | **Verified:** 9,401 frames; 0 draw errors in the recorded session |
 | Original native launcher and source integrity | **Verified offline**; never executed by Balatro |
-| Real installed-app/package catalog, icons and artwork | **Not connected** |
+| Real PC package preview in BROWSE | **Implemented on this branch**; hardware verification pending |
+| Installed SD app catalog, original icons and artwork | **Not connected** |
 | Application installation and native execution from Balatro | **Not implemented** |
 | Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
 | Full parity with the original IZ2S menu | **Not achieved** |
@@ -34,11 +35,14 @@ The current view has **no verified application or package catalog**, so BROWSE d
 
 ## Run the current Lua menu
 
-Requirements: Switch 2 with the existing Balatro Lua RPC listener running on the same **trusted local network**; Windows or another host with Node.js and this repository checked out on `feature/balatro-diagnostics-backend`. Replace the example IP with your console's address.
+Requirements: Switch 2 with the existing Balatro Lua RPC listener running on the same **trusted local network**; Windows or another host with Node.js and this repository checked out on `feature/balatro-orbit-focus-catalog`. Replace the example IP with your console's address.
 
 ```powershell
-git pull
+git fetch origin
+git switch --track origin/feature/balatro-orbit-focus-catalog
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 start
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-catalog.cjs 192.168.1.232
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 status
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs 192.168.1.232 stop
 ```
@@ -57,7 +61,8 @@ node --test test/balatro-*.test.cjs
 | --- | --- |
 | `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus-model.lua` | Lua navigation state and layout geometry derived from the original shaders |
 | `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.lua` | LÖVE drawing, controller hooks and reversible lifecycle |
-| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs` | Bounded Lua RPC interface: `start`, `status`, `left`, `right`, `select`, `back`, `stop` |
+| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-focus.cjs` | Lua model initialization and menu RPC: `start`, `status`, `left`, `right`, `select`, `back`, `stop` |
+| `engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-catalog.cjs` | Validated, read-only IZ2S PC library previews published as browse-only Lua rows |
 | `engines/CivSwitch/launcher/app/shaders/` | Original ORBIT FOCUS layout, colors and navigation reference |
 | `core/console/sd-launcher/` | Original native launcher and bootstrap, not executed from Balatro |
 
@@ -65,7 +70,7 @@ The Balatro native-entry adapter deliberately rejects unsupported native operati
 
 ## Next priorities
 
-1. Connect a **verified, read-only source** of IZ2S application/package metadata to the Lua view, without inventing installed applications.
+1. Confirm the PC preview catalog appears in BROWSE on physical hardware; keep it distinct from installed SD applications.
 2. Reuse the original font atlas, artwork, transitions and layout details to improve visual fidelity.
 3. Investigate supported Balatro capabilities independently before offering installation or application launching.
 
