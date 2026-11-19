@@ -121,7 +121,7 @@ test('picker detail shows a verified PC preview without installing it',()=>{
  assert.equal(state.installed,0);
  assert.equal(state.nativeCoreReady,false);
  assert.match(TEMPLATE,/PACKAGE DETAILS/);
- assert.match(TEMPLATE,/PC PREVIEW ONLY - NOT INSTALLED/);
+ assert.match(TEMPLATE,/PC PREVIEW - NOT INSTALLED/);
  assert.match(TEMPLATE,/app\.detail=app\.catalog and app\.catalog\[model\.selected\+1\]/);
  assert.throws(()=>parse(reply.replace('packages=4;source=0','packages=0;source=0'),'status'));
 });
