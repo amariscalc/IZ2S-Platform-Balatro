@@ -12,16 +12,18 @@ const LUA=[
  'local id=type(d)=="table" and d.id=="book-reader" and "book-reader" or type(d)=="table" and "other" or "none"',
  'local kind=type(a)=="table" and a.catalogKind or nil',
  'kind=kind=="source" and "source" or kind=="pc" and "pc" or "none"',
- 'return "IZ2S_BOOK_READER_SELECTION_V1;phase="..phase..";id="..id..";kind="..kind',
+ 'local requests=type(a)=="table" and math.min(999999999,math.max(0,tonumber(a.bookReaderLaunchRequests) or 0)) or 0',
+ 'return "IZ2S_BOOK_READER_SELECTION_V1;phase="..phase..";id="..id..";kind="..kind..";requests="..math.floor(requests)',
 ].join('\n');
 function parse(reply){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Unexpected ORBIT FOCUS RPC framing');
- const m=/^IZ2S_BOOK_READER_SELECTION_V1;phase=(idle|other|detail);id=(none|other|book-reader);kind=(none|pc|source)$/.exec(reply.slice(3).trim());
+ const m=/^IZ2S_BOOK_READER_SELECTION_V1;phase=(idle|other|detail);id=(none|other|book-reader);kind=(none|pc|source)(?:;requests=(0|[1-9][0-9]{0,8}))?$/.exec(reply.slice(3).trim());
  if(!m||(m[1]==='detail'&&m[2]==='none')||(m[1]!=='detail'&&m[2]!=='none')||
    (m[1]==='idle'&&m[3]!=='none')||(m[1]==='detail'&&m[3]==='none'))
   throw Error('Invalid ORBIT FOCUS Book Reader selection');
  return {phase:m[1],selectedId:m[2],catalogKind:m[3],
-  bookReaderSelected:m[1]==='detail'&&m[2]==='book-reader'};
+  bookReaderSelected:m[1]==='detail'&&m[2]==='book-reader',
+  launchRequests:m[4]===undefined?0:Number(m[4])};
 }
 async function inspect(host,{port=9026,packageFile,expectedSha256,send=request,
  verifyPackage=verify,makeBoundary=createBoundary}={}){
