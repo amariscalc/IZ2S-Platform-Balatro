@@ -38,14 +38,14 @@ local function draw()
    g.print(d.name,115,410,0,1.6,1.6)
    g.setColor(C.muted);g.print("VERSION  "..d.version,115,485,0,1.2,1.2)
    g.print("ID  "..d.id,115,538,0,1.2,1.2)
-   g.print((app.catalogKind=="source" and "DESCRIPTOR SHA256  " or "PACKAGE SHA256  ")..d.sha256:sub(1,32),115,600)
+   g.print((app.catalogKind=="source" and "SOURCE SHA256  " or "PACKAGE SHA256  ")..d.sha256:sub(1,32),115,600)
    g.print(d.sha256:sub(33),115,634)
-   g.setColor(C.accent);g.print(app.catalogKind=="source" and "SOURCE DESCRIPTOR - NOT INSTALLABLE" or "PC PREVIEW ONLY - NOT INSTALLED",115,735,0,1.25,1.25)
+   g.setColor(C.accent);g.print(app.catalogKind=="source" and "SOURCE ONLY - NOT INSTALLABLE" or "PC PREVIEW ONLY - NOT INSTALLED",115,735,0,1.25,1.25)
    g.print("B  BACK TO BROWSE",115,977,0,1.2,1.2)
   elseif app.model.picking then
    g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
    if app.catalog and #app.catalog>0 then
-    g.setColor(C.muted);g.print(app.catalogKind=="source" and "OFFICIAL SOURCE INDEX - NOT INSTALLED" or "PC PREVIEW - NOT INSTALLED",115,354,0,1.2,1.2)
+    g.setColor(C.muted);g.print(app.catalogKind=="source" and "SOURCE INDEX - NOT INSTALLED" or "PC PREVIEW - NOT INSTALLED",115,354,0,1.2,1.2)
     for i,p in ipairs(app.catalog) do
      local x,y=Model.cardCenter(i-1,app.model.flow)
      if x>280 and x<1870 then
