@@ -49,7 +49,7 @@ def icon_hex(source):
 def glyph_hex(atlas, rect):
     x, y, w, h = rect
     pixels = list(atlas.crop((x, y, x+w, y+h)).convert("L").getdata())
-    # Original atlas stores grayscale coverage, at two bits per pixel.
+    # Source-atlas glyph coverage is quantized to one bit for bounded RPC.
     stream = []
     for at in range(0, len(pixels), 4):
         four = pixels[at:at+4]
@@ -57,8 +57,8 @@ def glyph_hex(atlas, rect):
             four.append(0)
         n = 0
         for pix in four:
-            n = (n << 2) | min(3, (pix * 3 + 127) // 255)
-        stream.append(f"{n:02x}")
+            n = (n << 1) | int(pix >= 90)
+        stream.append(f"{n:x}")
     return "".join(stream)
 
 def main():
