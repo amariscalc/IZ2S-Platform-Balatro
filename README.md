@@ -123,6 +123,17 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-evidence.
 
 The first probe exercises real, bounded allocation, writes, reads, comparison and release using a fresh random ownership token. The second combines the existing upstream native bridge checks (SDK getter, owned memory, bounded native memcpy) with the binary round-trip. The result distinguishes **observed userland capability** from missing native requirements. It never calls executable mapping, service IPC or the supervisor. Run these tests while Balatro is open and TCP RPC is available; they do not stop the ORBIT FOCUS frontend.
 
+The original Book Reader's **actual native package bytes** can also be tested across the title boundary. This uses the previously verified 2.4 MB `launcher.iza`, copies only its first 512 bytes into a newly allocated title-owned buffer in four bounded chunks, reads those exact bytes back, compares a SHA-256, releases the buffer and clears the session. It **does not load the native image**, install to SD, expose addresses or call the original supervisor.
+
+```powershell
+node --test test/balatro-book-reader-transfer.test.cjs
+$reader = "data/build-cache/balatro-original-book-reader/book-reader-20BvuW/launcher.iza"
+$sha = "7f205e66829bd8788d68dfd6f4c2e8a6f640cb20e3a53ef021dbc5a1a37747e6"
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/book-reader-transfer.cjs 192.168.1.232 $reader $sha
+```
+
+A successful result reports `phase: "original-bytes-verified-in-title"`, `identical: true`, `consoleSdWritten: false`, and `originalAppExecuted: false`.
+
 The Book Reader original `launcher.iza` is already built and locally staged. A successful binary round-trip does **not** mean that the 2.4 MB package can execute: the original launcher still requires a separately verified filesystem, graphics, memory, executable mapping and thread ownership contract.
 
 ## Upstream and licenses
