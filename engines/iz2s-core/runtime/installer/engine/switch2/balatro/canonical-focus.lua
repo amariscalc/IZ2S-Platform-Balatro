@@ -2,9 +2,7 @@
 -- Uses shared geometry/navigation from canonical-focus-model.lua injected by PC.
 -- Read-only presentation: no fabricated catalog, install or native launch.
 local OP="status"
-local Model=(function()
--- __MODEL_SOURCE__
-end)()
+local Model=rawget(_G,"__IZ2S_CANONICAL_FOCUS_MODEL_V1")
 local KEY="__IZ2S_CANONICAL_FOCUS_LUA_V1"
 local app=rawget(_G,KEY)
 local function countEvents(field)
@@ -36,7 +34,18 @@ local function draw()
   local hasApps=app.model.installed>0
   if app.model.picking then
    g.setColor(C.ink);g.print("BROWSE PACKAGES",115,286,0,2.0,2.0)
-   g.setColor(C.muted);g.print("NO VERIFIED PACKAGE SOURCE",115,354,0,1.25,1.25)
+   if app.catalog and #app.catalog>0 then
+    for i,p in ipairs(app.catalog) do
+     local x,y=Model.cardCenter(i-1,app.model.flow)
+     if x>280 and x<1870 then
+      g.setColor(C.panel);g.rectangle("fill",x-105,y-109,210,218,14,14)
+      g.setColor(app.model.selected==i-1 and C.accent or C.muted)
+      g.rectangle("line",x-105,y-109,210,218,14,14)
+      g.print(p.name:sub(1,23),x-90,y+41)
+      g.print(p.version,x-90,y+72)
+     end
+    end
+   else g.setColor(C.muted);g.print("NO VERIFIED PACKAGE SOURCE",115,354,0,1.25,1.25) end
    g.print("B  BACK",110,977,0,1.35,1.35)
   else
    local hx,hy=535,400
@@ -149,6 +158,7 @@ local function stop()
  rawset(_G,KEY,nil);app=nil
 end
 if OP=="start" then
+ if not Model then error("Canonical IZ2S focus model unavailable") end
  if not app and (type(rawget(_G,"__IZ2S_BALATRO_APP_V1"))=="table" or
                  type(rawget(_G,"__IZ2S_BALATRO_LAUNCHER_V1"))=="table") then
   return "IZ2S_FOCUS_V1;phase=blocked;view=conflict;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=0;inputhook=0;callbacks=0;consolecalls=0;consolefailures=0"
