@@ -125,6 +125,17 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/native-evidence.
 
 **The mere presence of a LÖVE filesystem API does not mean SD storage is available; FFI and SDK metadata do not grant native IPC or executable mappings.** Book Reader cannot be executed via the current title-local transport without those verified prerequisites, and `native-rpc-boundary.cjs` deliberately rejects unsupported operations. Do not infer execution from a successful preflight.
 
+### Latest loader-surface hardware result — 2026-11-19
+
+The operator ran the `native-loader-surface.cjs` and updated `native-evidence.cjs` probes on the physical Switch 2. All **7/7 Node tests passed**. The fixed read-only loader-surface RPC returned:
+
+- Present: `ffiDeclaration`, `sdkBaseMetadata`, `sdkGetterOffset`, `sdkMemcpyOffset`, `loveGraphicsPresent`, and `loveFilesystemPresent`.
+- Not registered under the checked Lua module names: `iz2sNroModuleReported: false`, `iz2sNativeModuleReported: false`.
+- No verified native session, console SD access, addressable native RPC, service IPC, executable code mapping, or supervisor thread.
+- Integrated `native-evidence.cjs` returned `phase: title-local-characterized`, all six observations true (including `loaderSurfaceInventoried`), and `issues: []`.
+
+**Interpretation:** LÖVE's filesystem API is not proof of console SD filesystem access. The FFI declaration API and SDK offsets are not a verified original IZ2S native transport. Missing registrations under the two checked Lua names do not rule out other modules, but do not provide a ready native loader. The Book Reader application is still *not executed*. The next milestone is a separately established, explicitly owned native IZ2S session with verified FS/IPC, executable mappings, rendering, and thread lifecycle; more title-local byte round trips do not satisfy those prerequisites.
+
 ### Switch 2 hardware evidence — 2026-11-19
 
 Verified from the operator's live Balatro RPC session on Switch 2:
