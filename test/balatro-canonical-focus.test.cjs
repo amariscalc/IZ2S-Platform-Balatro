@@ -103,6 +103,7 @@ test('start stages model, original visual primitives and animated scene before m
  assert.equal(calls[3],script('start'));
  assert.equal(result.phase,'running');
  assert.equal(result.installed,0);
+ assert.ok(result.visualStages.every(v=>v.loaded));
 });
 test('canonical picker draws real package-preview names, never fabricated installed apps',()=>{
  assert.match(TEMPLATE,/ipairs\(app\.catalog or \{\}\)/);
@@ -155,5 +156,21 @@ test('source-backed CivSwitch scene obeys 8 KiB RPC ceiling and preserves Lua fa
  assert.match(VISUAL_SCENE,/V\.icon\(g,a,p\.id/);
  assert.match(TEMPLATE,/if type\(scene\)=="function"/);
  assert.throws(()=>visualScript('unknown'));
- assert.throws(()=>parseVisual('-> IZ2S_VISUAL_V1;stage=scene;ok=0','scene'));
+ assert.equal(parseVisual('-> IZ2S_VISUAL_V1;stage=scene;ok=0','scene').loaded,false);
+});
+
+test('a malformed visual stage cannot stop the previously verified fallback view',async()=>{
+ let calls=0;
+ const state=await execute('192.168.1.232','start',{},async()=>{
+  calls++;
+  if(calls===1)return '-> IZ2S_FOCUS_MODEL_V1;state=ready';
+  if(calls===2)return '-> IZ2S_VISUAL_V1;stage=base;ok=1';
+  if(calls===3)return '-> Lua error: bad scene source';
+  return '-> IZ2S_FOCUS_V1;phase=running;view=home;selected=0;installed=0;frames=0;inputs=0;errors=0;drawhook=1;inputhook=1;callbacks=0;consolecalls=0;consolefailures=0;packages=0;source=0';
+ });
+ assert.equal(calls,4);
+ assert.equal(state.phase,'running');
+ assert.equal(state.visualStages[0].loaded,true);
+ assert.equal(state.visualStages[1].loaded,false);
+ assert.match(state.visualStages[1].error,/bad scene/);
 });
