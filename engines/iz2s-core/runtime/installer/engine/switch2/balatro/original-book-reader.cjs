@@ -28,7 +28,7 @@ async function inspect({root=ROOT,read=async name=>fs.readFile(path.join(root,na
  let descriptor,manifest;
  try{descriptor=JSON.parse(module);manifest=JSON.parse(app);}
  catch(e){return {phase:'blocked',blocker:'invalid-book-reader-descriptor',checked,ready:false};}
- if(descriptor.id!=='book-reader'||descriptor.version!=='0.1.0'||
+ if(!descriptor||!manifest||descriptor.id!=='book-reader'||descriptor.version!=='0.1.0'||
     manifest.id!=='book-reader'||manifest.version!==descriptor.version||
     manifest.format!=='hblauncher.gpu-app'||manifest.abi!==1)
   fail(MODULE,'Unexpected Book Reader identity/version/ABI');
@@ -52,7 +52,8 @@ async function inspect({root=ROOT,read=async name=>fs.readFile(path.join(root,na
      !Number.isInteger(native.bytes)||native.bytes<1||
      !/^[a-f0-9]{64}$/.test(native.sha256))
    fail(CONTROLLER+'/native.json','Native controller ABI/receipt is not compatible');
-  await load(CONTROLLER+'/runtime.bin',native.sha256);
+  const binary=await load(CONTROLLER+'/runtime.bin',native.sha256);
+  if(binary&&binary.length!==native.bytes)fail(CONTROLLER+'/runtime.bin','Native controller size differs');
   for(const [relative,digest] of Object.entries(native.sources||{})){
    const name=path.posix.normalize(CONTROLLER+'/'+relative);
    if(!name.startsWith('core/console/sd-launcher/')||
@@ -71,7 +72,7 @@ async function inspect({root=ROOT,read=async name=>fs.readFile(path.join(root,na
   nativeTransportReady:false,balatroLaunchReady:false,
   installedOnConsole:false,executedOnConsole:false,ready:false};
 }
-async function prepare({root=ROOT,includeLibrary=false,read,build}={}){
+async function prepare({root=ROOT,includeLibrary=false,read,build,decode}={}){
  const audit=await inspect({root,read});
  if(audit.phase!=='source-verified')return {...audit,phase:'blocked',prepared:false};
  const destination=path.join(root,OUTPUT);
@@ -84,7 +85,7 @@ async function prepare({root=ROOT,includeLibrary=false,read,build}={}){
      typeof product.output!=='string'||path.resolve(product.output)!==path.join(directory,'launcher.iza'))
    throw Error('Original builder returned an unexpected Book Reader artifact');
   const packageApi=require('../../../../../../../core/console/sd-launcher/package.cjs');
-  const decoded=packageApi.decode(product.bytes);
+  const decoded=(decode||packageApi.decode)(product.bytes);
   if(decoded.id!=='book-reader'||!decoded.native||decoded.delegated||
     decoded.nativeDataBytes===0||!decoded.sections.nativeCode?.length||
     !decoded.sections.vertex?.length||!decoded.sections.fragment?.length||
