@@ -14,7 +14,7 @@ The upstream **SmileBASIC** and **Civilization VII** entry methods remain separa
 - The same session reported **9,401 rendered frames**, **9,401 draw callbacks**, **0 draw errors** and **0 console draw failures**.
 - The original native launcher binary and its manifest-listed sources pass offline integrity checks. **This does not mean the binary has executed.**
 
-BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. The six source-index cards have now been visually confirmed on physical Switch hardware (BlitBun, Book Reader, Foldrift, IZ2S Cheese, IZPSX and VacooTube); opening a read-only details page is still awaiting hardware verification. These entries do not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
+BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. The six source-index cards have now been visually confirmed on physical Switch hardware (BlitBun, Book Reader, Foldrift, IZ2S Cheese, IZPSX and VacooTube); the BlitBun 1.15.8 details page (name, version, ID and source-descriptor SHA-256) has also been visually verified on the physical Switch. These entries do not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
 
 ### Verified and unverified features
 
@@ -23,12 +23,12 @@ BROWSE first reads verified PC package previews through IZ2S's existing reposito
 | Balatro Lua RPC (TCP 9026) | **Verified on Switch 2** |
 | LuaJIT/FFI, limited SDK calls and title-owned buffers | **Verified within Balatro's existing process**; not a native IZ2S transport |
 | ORBIT FOCUS Lua/LÖVE display | **Verified on screen**; partial port, not pixel-perfect |
-| Controller input and HOME → BROWSE navigation | **Verified on Switch 2**, including highlighted source-index cards; package-details navigation pending |
+| Controller input and HOME → BROWSE navigation | **Verified on Switch 2**, including highlighted source-index cards and opening BlitBun details |
 | Draw callbacks and rendering | **Verified:** 9,401 frames; 0 draw errors in the recorded session |
 | Original native launcher and source integrity | **Verified offline**; never executed by Balatro |
 | Verified PC package preview in BROWSE | **Implemented**; real PC inventory observed empty on Switch test (0 entries) |
 | Official-version-matched local source descriptor fallback | **Verified visually on Switch 2:** six real metadata entries displayed; never installable |
-| Read-only catalog details | **Implemented**; selection/detail screen still awaits hardware verification |
+| Read-only catalog details | **Verified visually on Switch 2** for BlitBun 1.15.8; returning with B not independently documented |
 | Installed SD app catalog, original icons and artwork | **Not connected** |
 | Application installation and native execution from Balatro | **Not implemented** |
 | Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
