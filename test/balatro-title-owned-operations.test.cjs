@@ -5,6 +5,8 @@ test('uses fixed private VFS marker and bounded title-local worker',()=>{
  assert.match(LUA,/iz2s-book-reader-title-vfs-probe.txt/);
  assert.match(LUA,/fs.remove\(name\)/);
  assert.match(LUA,/worker:wait\(\)/);
+ assert.match(LUA,/fs.newFileData/);
+ assert.match(LUA,/th.newThread\(data\)/);
  assert.doesNotMatch(LUA,/ro:dmnt|svc|mapCode|ffi\.call/);
 });
 test('parses verified native-title operations without granting supervisor',()=>{
@@ -34,7 +36,7 @@ test('sends one hardware request; never retries',async()=>{
 });
 
 test('thread failure returns the precise phase instead of an undifferentiated error',()=>{
- for(const phase of ['create-error','start-error','wait-error','get-error-error']){
+ for(const phase of ['filedata-error','filedata-unsupported','create-error','start-error','wait-error','get-error-error']){
   const result=parse('-> IZ2S_BALATRO_TITLE_OPS_V1;vfs=verified;worker='+phase);
   assert.equal(result.threading.loveWorkerLifecycle,phase);
   assert.equal(result.originalSupervisorThreadVerified,false);
@@ -42,4 +44,10 @@ test('thread failure returns the precise phase instead of an undifferentiated er
  assert.match(LUA,/origin="start"/);
  assert.match(LUA,/origin="wait"/);
  assert.match(LUA,/origin="get-error"/);
+});
+
+test('passes FileData rather than treating inline Lua source as a filename',()=>{
+ assert.doesNotMatch(LUA,/th.newThread\("local n=1\+1"\)/);
+ assert.match(LUA,/fs.newFileData\("local n=1\+1","iz2s-book-reader-worker-probe.lua"\)/);
+ assert.match(LUA,/th.newThread\(data\)/);
 });
