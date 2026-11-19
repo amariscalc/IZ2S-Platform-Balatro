@@ -27,20 +27,24 @@ const LUA=[
  ' fsResult=ok and out or "error"',
  'end',
  'if has(th,"newThread") then',
+ ' local origin="create"',
  ' local ok,out=pcall(function()',
  '  local worker=th.newThread("local n=1+1")',
  '  if type(worker)~="userdata" and type(worker)~="table" then return "invalid-worker" end',
+ '  origin="start"',
  '  worker:start()',
+ '  origin="wait"',
  '  worker:wait()',
+ '  origin="get-error"',
  '  local err=worker:getError()',
  '  if err then return "worker-error" end',
  '  return "verified"',
  ' end)',
- ' workerResult=ok and out or "error"',
+ ' workerResult=ok and out or (origin.."-error")',
  'end',
  'return "IZ2S_BALATRO_TITLE_OPS_V1;vfs="..fsResult..";worker="..workerResult'
 ].join('\n');
-const RESULTS=new Set(['verified','unsupported','write-failed','read-mismatch','remove-failed','error','invalid-worker','worker-error']);
+const RESULTS=new Set(['verified','unsupported','write-failed','read-mismatch','remove-failed','error','invalid-worker','worker-error','create-error','start-error','wait-error','get-error-error']);
 function parse(reply){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Invalid Balatro response framing');
  const match=/^IZ2S_BALATRO_TITLE_OPS_V1;vfs=([a-z-]+);worker=([a-z-]+)$/.exec(reply.slice(3).trim());
