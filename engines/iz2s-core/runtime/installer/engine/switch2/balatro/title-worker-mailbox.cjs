@@ -70,7 +70,7 @@ const luaChecksum=[
  'local ok=pcall(function() s.inbox:push("checksum:2") end)',
  'if not ok then return "IZ2S_MAILBOX_V1;phase=checksum-send-error" end',
  'return "IZ2S_MAILBOX_V1;phase=checksum-sent"'
-].join('\\n');
+].join('\n');
 const luaChecksumStatus=[
  'local s=rawget(_G,"__IZ2S_BOOK_READER_MAILBOX_V1")',
  'if type(s)~="table" or s.phase~="started" then return "IZ2S_MAILBOX_V1;phase=not-started" end',
@@ -82,7 +82,7 @@ const luaChecksumStatus=[
  'if msg~="checksum:2:42" then return "IZ2S_MAILBOX_V1;phase=checksum-mismatch" end',
  's.checksumReceived=true',
  'return "IZ2S_MAILBOX_V1;phase=checksum-verified"'
-].join('\\n');
+].join('\n');
 const SCRIPTS=Object.freeze({start:luaStart,send:luaCommand,status:luaStatus,
  checksum:luaChecksum,checksumStatus:luaChecksumStatus});
 const PHASES=new Set(['already-started','unsupported','channels-error','filedata-error','create-error','start-error',
