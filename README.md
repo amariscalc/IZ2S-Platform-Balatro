@@ -138,6 +138,10 @@ The operator ran the `native-loader-surface.cjs` and updated `native-evidence.cj
 
 ### Switch 2 hardware evidence — 2026-11-19
 
+**Latest live original Book Reader SDK memcpy — verified on Switch 2 (2026-11-19):** The operator ran `node --test test/balatro-owned-binary.test.cjs test/balatro-native-book-reader-copy.test.cjs` (**8/8 passing**) and then the new `native-book-reader-copy.cjs` command against Balatro RPC at `192.168.1.232`. The response reported `phase: original-book-reader-sdk-memcpy-verified`, `bytesNativeCopied: 512`, `nativeSdkMemcpyVerified: true`, `identical: true`, and `ownedBuffersReleased: true`. Both the original header and post-copy SHA-256 were `0d40524c96f00380768f1f94b39c37f9a864ca887e65d9a955a4c06557ad3fce`, using the verified original `launcher.iza` SHA-256 `7f205e66829bd8788d68dfd6f4c2e8a6f640cb20e3a53ef021dbc5a1a37747e6`.
+
+**Boundary:** This verifies native SDK memcpy on two separate *title-owned data buffers only*. The actual response still reports `nativeTransportReady: false`, `nativeSupervisorRunning: false`, `installedOnConsole: false`, `executedOnConsole: false`, and `ready: false`. The original entry contract additionally requires independently verified original native RPC, mapped session ownership, SD filesystem, original renderer, validated SDK/HID/Vulkan functions, authorized executable mapping, and supervisor thread lifecycle. Increasing the transferred byte count alone does not satisfy these requirements or imply execution.
+
 Verified from the operator's live Balatro RPC session on Switch 2:
 
 - **10/10 regression tests passed** for the owned-binary transport, native evidence aggregation and original Book Reader transfer.
