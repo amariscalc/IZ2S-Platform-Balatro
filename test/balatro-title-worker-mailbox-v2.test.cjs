@@ -22,8 +22,14 @@ test('strict parser and single bounded requests',async()=>{
  for(const state of PHASES)assert.equal(parse('-> IZ2S_MAILBOX_V2;phase='+state).phase,state);
  assert.throws(()=>parse('-> IZ2S_MAILBOX_V2;phase=native-success'));
  let count=0;
- for(const op of ['start','ping','checksum','stop','status'])await inspect('192.168.1.232',op,{send:async args=>{
+ for(const op of ['start','ping','checksum','status'])await inspect('192.168.1.232',op,{send:async args=>{
   count++;assert.equal(args.timeoutMs,5000);return '-> IZ2S_MAILBOX_V2;phase=started';
  }});
- assert.equal(count,5);
+ assert.equal(count,4);
+});
+
+test('known crashing stop action is disabled locally without sending any RPC',async()=>{
+ let sent=0;
+ await assert.rejects(()=>inspect('192.168.1.232','stop',{send:async()=>{sent++;return '-> IZ2S_MAILBOX_V2;phase=stop-sent';}}),/stop is disabled/);
+ assert.equal(sent,0);
 });
