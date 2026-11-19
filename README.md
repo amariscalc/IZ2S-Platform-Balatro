@@ -111,6 +111,18 @@ The handoff verifies the genuine `IZSDAPP1` ABI2 image and the original `sd-bund
 
 Run `node --test test/balatro-original-book-reader-handoff.test.cjs` to validate identity, fail-closed behavior, companion hashes and local staging.
 
+### Switch 2 hardware evidence — 2026-11-19
+
+Verified from the operator's live Balatro RPC session on Switch 2:
+
+- **10/10 regression tests passed** for the owned-binary transport, native evidence aggregation and original Book Reader transfer.
+- **64-byte owned-memory round trip** passed with allocation, write/read comparison, and release; `owned-binary.cjs check` reported `phase: verified`.
+- **512 genuine Book Reader package bytes** passed an exact round trip (`phase: original-bytes-verified-in-title`). Both SHA-256 values matched: `0d40524c96f00380768f1f94b39c37f9a864ca887e65d9a955a4c06557ad3fce`. The original package SHA-256 remains `7f205e66829bd8788d68dfd6f4c2e8a6f640cb20e3a53ef021dbc5a1a37747e6`. The buffer was released; the Switch SD card was not written.
+- `native-evidence.cjs` reported `phase: title-local-characterized` and all five bounded observations true: Lua RPC, fixed SDK getter, owned Lua memory, 16-byte native SDK memcpy, and PC-to-title binary round trip.
+- **No native application launch**: `nativeTransportReady: false`, `originalLauncherReady: false`, `originalBookReaderExecuted: false`, no service IPC, NRO mapping, executable memory, or native supervisor ownership verified. The seven requirements enumerated by the original entry contract remain unverified.
+
+These are real *title-local userland* results, not equivalent to an addressable IZ2S platform-2 RPC, filesystem session, native code mapping, or executing the original reader.
+
 ### Balatro title-owned binary transport and live capability evidence
 
 A new scoped RPC transport supports an actual 64-byte PC-to-Balatro-to-PC binary round trip, with byte verification, strictly bounded allocations, session-token isolation and zero-on-release. It is **only** LuaJIT-owned RAM inside the Balatro title, not the original IZ2S native address/IPC transport.
