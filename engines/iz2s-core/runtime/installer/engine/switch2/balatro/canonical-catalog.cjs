@@ -108,8 +108,8 @@ function parse(reply,expected){
   state:m[1],availablePackages:Number(m[2]),installedPackagesVerified:false,
   nativeApplicationLaunchAvailable:false,ready:false};
 }
-async function publish(host,{port=9026,root=ROOT,createRepository,send=request}={}){
- const source=await readCatalog({root,createRepository});
+async function publish(host,{port=9026,root=ROOT,createRepository,readSourceIndex,send=request}={}){
+ const source=await readCatalog({root,createRepository,readSourceIndex});
  const reply=await send({host,port,lua:payload(source.packages,source.kind),timeoutMs:5000});
  const result=parse(reply,source.packages.length);
  return {...result,availablePackages:source.kind==='pc-preview'?result.availablePackages:0,
