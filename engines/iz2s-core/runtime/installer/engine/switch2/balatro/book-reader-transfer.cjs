@@ -41,7 +41,9 @@ async function transfer(host,file,{port=9026,expectedSha256,
   }
   const received=Buffer.concat(returned);
   if(!received.equals(header))throw Error('Original Book Reader bytes changed in the Balatro RPC roundtrip');
-  requireOk(await session.release(handle),'release');handle=null;
+  const released=requireOk(await session.release(handle),'release');
+  if(released.value!==0)throw Error('Original Book Reader title buffer was not fully released');
+  handle=null;
   return {backend:'balatro',phase:'original-bytes-verified-in-title',
    app:'book-reader',packageSha256:checked.packageSha256,
    bytesTransferred:HEADER_BYTES,bytesVerified:HEADER_BYTES,
