@@ -22,7 +22,7 @@ test('canonical owned SD install verifies hash, reads back, releases lease',asyn
  const result=await api.install('fixture',{supervisor,storage,
   verifyArtifact:async()=>({phase:'package-verified',id:'book-reader',sourceFormat:'IZSDAPP1 native ABI2',packageFile:'fixture',packageBytes:bytes.length,packageSha256:sha(bytes),companionAssets:[]}),
   readFile:async()=>bytes,decode:()=>({id:'book-reader',native:true}),
-  installBytes:async()=>({id:'book-reader',readbackVerified:true,sha256:sha(bytes),headerCrc:123})});
+  installBytes:async()=>({id:'book-reader',readbackVerified:true,sha256:sha(bytes),headerCrc:123,assets:[]})});
  assert.equal(released,true);assert.equal(result.headerCrc,123);assert.equal(result.executedOnConsole,false);
 });
 test('native launch only after verified tile and real launch counter',async()=>{
@@ -39,4 +39,33 @@ test('unconfirmed launch is never reported as success',async()=>{
  const supervisor={status:async()=>menu({applications:[{id:'book-reader',source:'sd',headerCrc:123}]}),command:async()=>{}};
  const result=await api.launch({supervisor,headerCrc:123,checks:2,pause:async()=>{}});
  assert.equal(result.phase,'native-launch-unconfirmed');assert.equal(result.executedOnConsole,false);
+});
+
+test('companion receipts must match exact original identity and full SD readback',()=>{
+ const original={companionAssets:[{path:'asset-a.izdata',sha256:'a'.repeat(64),bytes:492}]};
+ assert.throws(()=>api.checkInstalledAssets({assets:[]},original),/incomplete/);
+ assert.throws(()=>api.checkInstalledAssets({assets:[{relativePath:'asset-a.izdata',sha256:'a'.repeat(64),bytes:492,readbackVerified:false}]},original),/not independently verified/);
+ assert.doesNotThrow(()=>api.checkInstalledAssets({assets:[{relativePath:'asset-a.izdata',sha256:'a'.repeat(64),bytes:492,readbackVerified:true}]},original));
+});
+test('native catalog acknowledgement requires stable live SD tile',async()=>{
+ let n=0;
+ const supervisor={status:async()=>++n===1?menu():menu({applications:[{id:'book-reader',source:'sd',headerCrc:123}]})};
+ const report=await api.confirmCatalog({supervisor,headerCrc:123,checks:2,pause:async()=>{}});
+ assert.equal(report.phase,'native-catalog-verified');
+ assert.equal(report.nativeCatalogAccepted,true);
+ assert.equal(report.originalAppExecuted,false);
+});
+test('native catalog not yet updated cannot become install success',async()=>{
+ const result=await api.confirmCatalog({supervisor:{status:async()=>menu()},headerCrc:123,checks:2,pause:async()=>{}});
+ assert.equal(result.phase,'native-catalog-pending');
+ assert.equal(result.nativeCatalogAccepted,false);
+});
+test('stale prior Book Reader failure does not invalidate fresh launch',async()=>{
+ let count=0;
+ const stale={id:'book-reader',sequence:7,error:123};
+ const supervisor={status:async()=>++count===1?menu({launchFailure:stale,applications:[{id:'book-reader',source:'sd',headerCrc:123}]})
+  :menu({launchFailure:stale,native_launches:1,last_id:'book-reader',active:1}),
+  command:async()=>{}};
+ const result=await api.launch({supervisor,headerCrc:123,checks:2,pause:async()=>{}});
+ assert.equal(result.phase,'native-app-running');
 });
