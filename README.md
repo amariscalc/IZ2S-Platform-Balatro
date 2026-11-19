@@ -9,12 +9,12 @@ The upstream **SmileBASIC** and **Civilization VII** entry methods remain separa
 **Confirmed on a physical Switch 2 running firmware 23.0.1:**
 
 - Balatro's Lua RPC listener is reachable over TCP **9026**, and LuaJIT/FFI interfaces are available.
-- The **ORBIT FOCUS** Lua view is visible on the Switch 2 screen. It displays the IZ2S title, **ADD** card and **BROWSE** screen, using layout geometry and colors derived from the upstream shaders.
+- The **ORBIT FOCUS** Lua view is visible on the Switch 2 screen, with HOME, BROWSE, a selected-app hero panel, and read-only package details. The original CivSwitch type atlas currently renders its **IZlauncher** title.
 - The gamepad works with the Lua view: a later session recorded **30 controller events**, and BROWSE visually displayed the six source-index entries with the first card highlighted.
 - The same session reported **9,401 rendered frames**, **9,401 draw callbacks**, **0 draw errors** and **0 console draw failures**.
 - The original native launcher binary and its manifest-listed sources pass offline integrity checks. **This does not mean the binary has executed.**
 
-BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. The six source-index cards and BlitBun 1.15.8 details page have been visually confirmed on physical Switch hardware. A richer source-inspired render scene and original image loading have since been added and still require separate hardware verification. These entries do not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
+BROWSE first reads verified PC package previews through IZ2S's existing repository. If that inventory is empty, it falls back to matching local `module.json` descriptors against the repository's official app-version receipts. **Source entries are not verified package files**: their displayed SHA-256 identifies the descriptor, not a downloadable IZA. A selected entry opens read-only details. The six source-index cards and BlitBun 1.15.8 details page have been visually confirmed on physical Switch hardware. The richer scene, corrected BROWSE layout and all six original app icon textures are now visually confirmed on hardware; the source type-atlas title also renders. These entries do not represent installed SD applications. Native launching, installation, SD access and privileged service operations are not implemented through the Balatro entry method.
 
 ### Verified and unverified features
 
@@ -29,9 +29,9 @@ BROWSE first reads verified PC package previews through IZ2S's existing reposito
 | Verified PC package preview in BROWSE | **Implemented**; real PC inventory observed empty on Switch test (0 entries) |
 | Official-version-matched local source descriptor fallback | **Verified visually on Switch 2:** six real metadata entries displayed; never installable |
 | Read-only catalog details | **Verified visually on Switch 2** for BlitBun 1.15.8; returning with B not independently documented |
-| Animated orbital scene, hero panel and transitions | **Verified on Switch 2**; compact BROWSE layout fix pending visual confirmation |
-| Original CivSwitch type crops and six application icons | **Standard-library PNG conversion, bounded upload implemented**; icon rendering pending Switch verification |
-| Installed SD app catalog, original icons and artwork | **Not connected** |
+| Orbital scene, selected-app hero, compact BROWSE layout | **Verified visually on Switch 2**; transition animation timing not independently measured |
+| Original CivSwitch type crops and six application icons | **15/15 resources loaded, six icons and original title verified on screen** |
+| Installed SD app catalog and native application assets | **Not connected** |
 | Application installation and native execution from Balatro | **Not implemented** |
 | Native addressable RPC, process memory mapping, service IPC and supervisor thread | **Not verified or implemented** |
 | Full parity with the original IZ2S menu | **Not achieved** |
