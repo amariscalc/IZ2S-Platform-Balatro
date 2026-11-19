@@ -83,6 +83,7 @@ function parse(reply){
 async function inspect(host,op,{port=9026,send=request}={}){
  if(typeof host!=='string'||!host||/\s/.test(host))throw Error('Invalid Balatro host');
  if(!Object.prototype.hasOwnProperty.call(SCRIPTS,op))throw Error('Invalid V2 operation');
+ if(op==='stop')throw Error('V2 stop is disabled: confirmed Balatro crash after stop on physical Switch 2; do not retry');
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid RPC port');
  return parse(await send({host,port,lua:SCRIPTS[op],timeoutMs:5000,maxReplyBytes:1024}));
 }
