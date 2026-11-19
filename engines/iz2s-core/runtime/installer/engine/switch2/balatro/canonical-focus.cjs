@@ -37,7 +37,7 @@ function parse(reply,op){
  if(!m)throw Error('Invalid canonical focus response');
  const [,phase,view,rawSelection,rawInstalled,rawFrames,rawInputs,rawErrors,drawHook,inputHook,callbacks,consoleCalls,consoleFailures]=m;
  const selected=Number(rawSelection),installed=Number(rawInstalled);
- if(installed>15||selected>installed||
+ if(installed>15||selected>(view==='picker'?15:installed)||
     (phase==='idle'&&(view!=='none'||selected!==0||installed!==0))||
     (phase==='blocked'&&(view!=='conflict'||selected!==0||installed!==0))||
     (phase==='running'&&!['home','picker'].includes(view))||
