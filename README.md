@@ -42,7 +42,7 @@ BROWSE first reads verified PC package previews through IZ2S's existing reposito
 Requirements: Switch 2 with the existing Balatro Lua RPC listener running on the same **trusted local network**; Windows or another host with Node.js and this repository checked out on `feature/balatro-orbit-focus-catalog`. Replace the example IP with your console's address.
 
 ```powershell
-git switch feature/balatro-orbit-focus-catalog
+git switch feature/balatro-original-book-reader
 git pull --ff-only
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs 192.168.1.232 stop
 node engines/iz2s-core/runtime/installer/engine/switch2/balatro/canonical-orbit.cjs 192.168.1.232 start
@@ -92,6 +92,24 @@ node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-re
 `inspect` verifies the original module, pinned GPU files, native ABI2 reader controller and its source hashes. `prepare` builds and reads back `launcher.iza` and its companion `.izdata` file using the **real native IZ2S build path**, under `data/build-cache/balatro-original-book-reader/book-reader-*/`. The default includes the original built-in welcome book; pass `--include-library` to include previously imported books.
 
 These operations run **only on the PC**. An actual Book Reader launch requires a verified native IZ2S SD launcher and owned filesystem/Vulkan session. The Balatro Lua RPC does not currently provide that environment; no install, thread or native code execution is attempted or reported by this command.
+
+### Verified original Book Reader handoff (PC to IZ2S SD layout)
+
+After `prepare` returns `phase: "prepared-on-pc"`, reuse its exact `packageFile` and `packageSha256`; do not rebuild the reader.
+
+```powershell
+$reader = "data/build-cache/balatro-original-book-reader/book-reader-20BvuW/launcher.iza"
+$sha = "7f205e66829bd8788d68dfd6f4c2e8a6f640cb20e3a53ef021dbc5a1a37747e6"
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-reader-handoff.cjs verify $reader $sha
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-reader-handoff.cjs stage $reader $sha
+node engines/iz2s-core/runtime/installer/engine/switch2/balatro/original-book-reader-handoff.cjs live 192.168.1.232 $reader $sha
+```
+
+The handoff verifies the genuine `IZSDAPP1` ABI2 image and the original `sd-bundle.json` companion identities using the canonical package/asset decoders. `stage` writes a **PC-local export** beneath `data/build-cache/balatro-original-book-reader/sd-exports/<digest>/iz2s/modules/book-reader/` with `launcher.iza` and its immutable `.izdata` companion. It never mounts or writes the Switch SD card. `live` queries only Balatro's read-only RPC boundary and reports any missing native prerequisites.
+
+**Neither `stage` nor `live` installs or executes the application on Switch 2.** A verified FS/IPC/native supervisor must be established separately before the original application's execution can be confirmed. Do not interpret files on the PC as files installed on the console. This is not a general-purpose native process launcher.
+
+Run `node --test test/balatro-original-book-reader-handoff.test.cjs` to validate identity, fail-closed behavior, companion hashes and local staging.
 
 ## Upstream and licenses
 
