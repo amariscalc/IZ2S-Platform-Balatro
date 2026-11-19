@@ -16,19 +16,10 @@ function V.box(g,x,y,w,h,r,outline)
  g.rectangle(outline and "line" or "fill",x,y,w,h,r or 0,r or 0)
 end
 function V.text(g,a,key,x,y,fallback,size,scale)
- local atlas=a.images and a.images.type
- local r=V.atlas[key]
- if atlas and r and g.newQuad then
-  local q=V.quads and V.quads[key]
-  if not q then
-   V.quads=V.quads or {}
-   local ok,result=pcall(g.newQuad,r[1],r[2],r[3],r[4],768,1216)
-   if ok then q=result;V.quads[key]=q end
-  end
-  if q then
-   local ok=pcall(g.draw,atlas,q,x,y,0,scale or 1,scale or 1)
-   if ok then return end
-  end
+ local sprite=a.images and a.images["type-"..key]
+ if sprite then
+  local ok=pcall(g.draw,sprite,x,y,0,scale or 1,scale or 1)
+  if ok then return end
  end
  g.print(fallback,x,y,0,size or 1,size or 1)
 end
