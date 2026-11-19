@@ -6,17 +6,30 @@ const {request}=require('./rpc.cjs');
 const MODEL=fs.readFileSync(path.join(__dirname,'canonical-focus-model.lua'),'utf8');
 const TEMPLATE=fs.readFileSync(path.join(__dirname,'canonical-focus.lua'),'utf8');
 const OPS=Object.freeze(['start','status','left','right','select','back','stop']);
-function script(op){
- if(!OPS.includes(op))throw Error('Unsupported canonical focus operation');
- const action='local OP="status"',model='-- __MODEL_SOURCE__';
- if(!TEMPLATE.includes(action)||!TEMPLATE.includes(model)||
-   !MODEL.includes('return M'))throw Error('Invalid canonical focus source');
- const source=TEMPLATE.replace(action,'local OP="'+op+'"').replace(model,MODEL);
- // Strip full-line comments and indentation; preserve Lua line boundaries.
- const code=source.split('\n').map(line=>line.trim())
+const MODEL_KEY='__IZ2S_CANONICAL_FOCUS_MODEL_V1';
+function compact(source){
+ return source.split('\n').map(line=>line.trim())
   .filter(line=>line.length>0&&!line.startsWith('--')).join('\n');
+}
+function withinLimit(code){
  if(Buffer.byteLength(code)>8192)throw Error('Canonical focus payload exceeds Balatro RPC limit');
  return code;
+}
+function modelScript(){
+ if(!MODEL.includes('return M'))throw Error('Invalid canonical focus model');
+ return withinLimit(compact('local Model=(function()\n'+MODEL+
+  '\nend)()\nrawset(_G,"'+MODEL_KEY+'",Model)\nreturn "IZ2S_FOCUS_MODEL_V1;state=ready"'));
+}
+function script(op){
+ if(!OPS.includes(op))throw Error('Unsupported canonical focus operation');
+ const action='local OP="status"';
+ if(!TEMPLATE.includes(action)||!TEMPLATE.includes(MODEL_KEY))
+  throw Error('Invalid canonical focus source');
+ return withinLimit(compact(TEMPLATE.replace(action,'local OP="'+op+'"')));
+}
+function parseModel(reply){
+ if(typeof reply!=='string'||reply.trim()!=='-> IZ2S_FOCUS_MODEL_V1;state=ready')
+  throw Error('Canonical focus model failed to initialize');
 }
 function parse(reply,op){
  if(typeof reply!=='string'||!reply.startsWith('-> '))throw Error('Invalid focus RPC framing');
@@ -42,7 +55,9 @@ function parse(reply,op){
   nativeSupervisorRunning:false,nativeCoreReady:false,ready:false};
 }
 async function execute(host,op,options={},send=request){
- return parse(await send({host,port:9026,timeoutMs:5000,lua:script(op),...options}),op);
+ const transport={host,port:9026,timeoutMs:5000,...options};
+ if(op==='start')parseModel(await send({...transport,lua:modelScript()}));
+ return parse(await send({...transport,lua:script(op)}),op);
 }
 async function main(){
  const [host,op='status',portArg]=process.argv.slice(2);
@@ -54,4 +69,4 @@ async function main(){
  catch(e){console.error(JSON.stringify({backend:'balatro',phase:'error',ready:false,error:e.message}));process.exitCode=1;}
 }
 if(require.main===module)main();
-module.exports={MODEL,TEMPLATE,OPS,script,parse,execute};
+module.exports={MODEL,TEMPLATE,OPS,MODEL_KEY,modelScript,parseModel,script,parse,execute};
