@@ -105,9 +105,9 @@ test('start stages model, original visual primitives and animated scene before m
  assert.equal(result.installed,0);
 });
 test('canonical picker draws real package-preview names, never fabricated installed apps',()=>{
- assert.match(TEMPLATE,/ipairs\(app\.catalog\)/);
- assert.match(TEMPLATE,/p\.name:sub\(1,23\)/);
- assert.match(TEMPLATE,/app\.model\.selected==i-1/);
+ assert.match(TEMPLATE,/ipairs\(app\.catalog or \{\}\)/);
+ assert.match(VISUAL_SCENE,/p\.name:sub\(1,23\)/);
+ assert.match(VISUAL_SCENE,/a\.model\.selected==i-1/);
  assert.match(TEMPLATE,/NO VERIFIED PACKAGE SOURCE/);
 });
 
@@ -125,8 +125,8 @@ test('picker detail shows a verified PC preview without installing it',()=>{
  assert.equal(state.availablePackages,4);
  assert.equal(state.installed,0);
  assert.equal(state.nativeCoreReady,false);
- assert.match(TEMPLATE,/PACKAGE DETAILS/);
- assert.match(TEMPLATE,/PC PREVIEW - NOT INSTALLED/);
+ assert.match(VISUAL_SCENE,/PACKAGE DETAILS/);
+ assert.match(VISUAL_SCENE,/PC PREVIEW - NOT INSTALLED/);
  assert.match(TEMPLATE,/app\.detail=app\.catalog and app\.catalog\[model\.selected\+1\]/);
  assert.throws(()=>parse(reply.replace('packages=4;source=0','packages=0;source=0'),'status'));
 });
@@ -137,7 +137,7 @@ test('source-only entries cannot be reported as installable PC packages',()=>{
  assert.equal(state.sourceCatalogEntries,3);
  assert.equal(state.availablePackages,0);
  assert.equal(state.installed,0);
- assert.match(TEMPLATE,/SOURCE ONLY - NOT INSTALLABLE/);
+ assert.match(VISUAL_SCENE,/SOURCE ONLY - NOT INSTALLABLE/);
  assert.throws(()=>parse(reply.replace('packages=0;source=3','packages=1;source=3'),'status'));
 });
 test('stop returns the full clean idle schema, including both catalog counts',()=>{
