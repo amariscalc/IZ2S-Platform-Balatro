@@ -20,9 +20,12 @@ local function draw()
   g.translate((w-Model.width*scale)/2,(h-Model.height*scale)/2)
   g.scale(scale)
   local scene=rawget(_G,"__IZ2S_FOCUS_SCENE_V1")
+  local painted=false
   if type(scene)=="function" then
-   scene(app,g)
-  else
+   painted=pcall(scene,app,g)
+   if not painted then countEvents("errors") end
+  end
+  if not painted then
    g.setColor(Model.colors.background)
    g.rectangle("fill",0,0,1920,1080)
    g.setColor(Model.colors.ink);g.print("IZ2S",96,68,0,3.2,3.2)
@@ -31,6 +34,7 @@ local function draw()
    if app.detail then g.print(app.detail.name,130,390,0,2,2)
    elseif app.model.picking then
     g.print("BROWSE PACKAGES",115,286,0,2,2)
+    if not app.catalog or #app.catalog==0 then g.print("NO VERIFIED PACKAGE SOURCE",115,354) end
     for i,p in ipairs(app.catalog or {}) do
      local x,y=Model.cardCenter(i-1,app.model.flow)
      if x>280 and x<1870 then
@@ -38,7 +42,10 @@ local function draw()
       g.print(p.name,x-90,y+40)
      end
     end
-   else g.print("A  BROWSE",535,500,0,1.6,1.6) end
+   else
+    g.print("NO VERIFIED APPLICATIONS",782,420,0,1.2,1.2)
+    g.print("A  BROWSE",535,500,0,1.6,1.6)
+   end
   end
  end)
  pcall(g.pop)
